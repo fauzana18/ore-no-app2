@@ -1,33 +1,27 @@
-/*
- =========================================================
- * Vue Black Dashboard - v1.1.0
- =========================================================
+/*!
 
- * Product Page: https://www.creative-tim.com/product/black-dashboard
- * Copyright 2018 Creative Tim (http://www.creative-tim.com)
+=========================================================
+* Vue Argon Dashboard - v2.0.0
+=========================================================
 
- =========================================================
+* Product Page: https://www.creative-tim.com/product/vue-argon-dashboard
+* Copyright 2021 Creative Tim (https://www.creative-tim.com)
+* Licensed under MIT (https://github.com/creativetimofficial/vue-argon-dashboard/blob/master/LICENSE.md)
 
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+* Coded by Creative Tim
 
- */
-import Vue from "vue";
-import VueRouter from "vue-router";
-import RouterPrefetch from 'vue-router-prefetch'
-import App from "./App";
-// TIP: change to import router from "./router/starterRouter"; to start with a clean layout
-import router from "./router/index";
+=========================================================
 
-import BlackDashboard from "./plugins/blackDashboard";
-import i18n from "./i18n"
-import './registerServiceWorker'
-Vue.use(BlackDashboard);
-Vue.use(VueRouter);
-Vue.use(RouterPrefetch);
+* The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
-/* eslint-disable no-new */
-new Vue({
-  router,
-  i18n,
-  render: h => h(App)
-}).$mount("#app");
+*/
+import { createApp } from "vue";
+import App from "./App.vue";
+import router from "./router";
+import ArgonDashboard from "./plugins/argon-dashboard";
+import "element-plus/lib/theme-chalk/index.css";
+
+const appInstance = createApp(App);
+appInstance.use(router);
+appInstance.use(ArgonDashboard);
+appInstance.mount("#app");
