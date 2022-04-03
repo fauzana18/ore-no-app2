@@ -1,119 +1,65 @@
-<script setup>
-import { RouterLink, RouterView } from 'vue-router'
-import HelloWorld from '@/components/HelloWorld.vue'
-</script>
-
 <template>
-  <header>
-    <img alt="Vue logo" class="logo" src="@/assets/logo.svg" width="125" height="125" />
-
-    <div class="wrapper">
-      <HelloWorld msg="You did it!" />
-
-      <nav>
-        <RouterLink to="/">Home</RouterLink>
-        <RouterLink to="/about">About</RouterLink>
-      </nav>
-    </div>
-  </header>
-
-  <RouterView />
+  <sidenav
+    v-if="$store.state.showSidenav"
+    :custom_class="$store.state.mcolor"
+    :class="[
+      $store.state.isTransparent,
+      $store.state.isRTL ? 'fixed-end' : 'fixed-start',
+    ]"
+  />
+  <main
+    class="main-content position-relative max-height-vh-100 h-100 border-radius-lg"
+    :style="$store.state.isRTL ? 'overflow-x: hidden' : ''"
+  >
+    <!-- nav -->
+    <navbar
+      v-if="$store.state.showNavbar"
+      :class="[navClasses]"
+      :text-white="$store.state.isAbsolute ? 'text-white opacity-8' : ''"
+      :min-nav="navbarMinimize"
+    />
+    <router-view />
+    <app-footer v-show="$store.state.showFooter" />
+    <configurator
+      :toggle="toggleConfigurator"
+      :class="[
+        $store.state.showConfig ? 'show' : '',
+        $store.state.hideConfigButton ? 'd-none' : '',
+      ]"
+    />
+  </main>
 </template>
+<script>
+import Sidenav from "./examples/Sidenav/index.vue";
+import Configurator from "@/examples/Configurator.vue";
+import Navbar from "@/examples/Navbars/Navbar.vue";
+import AppFooter from "@/examples/Footer.vue";
+import { mapMutations } from "vuex";
+export default {
+  name: "App",
+  components: {
+    Sidenav,
+    Configurator,
+    Navbar,
+    AppFooter,
+  },
 
-<style>
-@import '@/assets/base.css';
-
-#app {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-
-  font-weight: normal;
-}
-
-header {
-  line-height: 1.5;
-  max-height: 100vh;
-}
-
-.logo {
-  display: block;
-  margin: 0 auto 2rem;
-}
-
-a,
-.green {
-  text-decoration: none;
-  color: hsla(160, 100%, 37%, 1);
-  transition: 0.4s;
-}
-
-@media (hover: hover) {
-  a:hover {
-    background-color: hsla(160, 100%, 37%, 0.2);
-  }
-}
-
-nav {
-  width: 100%;
-  font-size: 12px;
-  text-align: center;
-  margin-top: 2rem;
-}
-
-nav a.router-link-exact-active {
-  color: var(--color-text);
-}
-
-nav a.router-link-exact-active:hover {
-  background-color: transparent;
-}
-
-nav a {
-  display: inline-block;
-  padding: 0 1rem;
-  border-left: 1px solid var(--color-border);
-}
-
-nav a:first-of-type {
-  border: 0;
-}
-
-@media (min-width: 1024px) {
-  body {
-    display: flex;
-    place-items: center;
-  }
-
-  #app {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    padding: 0 2rem;
-  }
-
-  header {
-    display: flex;
-    place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
-  }
-
-  header .wrapper {
-    display: flex;
-    place-items: flex-start;
-    flex-wrap: wrap;
-  }
-
-  .logo {
-    margin: 0 2rem 0 0;
-  }
-
-  nav {
-    text-align: left;
-    margin-left: -1rem;
-    font-size: 1rem;
-
-    padding: 1rem 0;
-    margin-top: 1rem;
-  }
-}
-</style>
+  computed: {
+    navClasses() {
+      return {
+        "position-sticky blur shadow-blur mt-4 left-auto top-1 z-index-sticky":
+          this.$store.state.isNavFixed,
+        "position-absolute px-4 mx-0 w-100 z-index-2":
+          this.$store.state.isAbsolute,
+        "px-0 mx-4 mt-4": !this.$store.state.isAbsolute,
+      };
+    },
+  },
+  beforeMount() {
+    this.$store.state.isTransparent = "bg-transparent";
+  },
+  methods: {
+    ...mapMutations(["toggleConfigurator", "navbarMinimize"]),
+  },
+};
+</script>
