@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "author": "Creative Tim (https://www.creative-tim.com/)",
   "scripts": {
+    "start": "node server.js",
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview --port 8080",
@@ -11,6 +12,7 @@
     "format": "prettier .  --write"
   },
   "dependencies": {
+    "express": "^4.17.3",
     "@popperjs/core": "2.10.2",
     "bootstrap": "5.1.3",
     "chart.js": "3.6.0",
