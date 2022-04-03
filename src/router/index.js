@@ -1,4 +1,4 @@
-import { createRouter, createWebHashHistory } from "vue-router";
+import { createRouter, createWebHistory } from "vue-router";
 import Dashboard from "@/views/Dashboard.vue";
 import Tables from "@/views/Tables.vue";
 import Billing from "@/views/Billing.vue";
@@ -57,9 +57,15 @@ const routes = [
 ];
 
 const router = createRouter({
-  history: createWebHashHistory(import.meta.env.BASE_URL),
+  history: createWebHistory(import.meta.env.BASE_URL),
   routes,
   linkActiveClass: "active",
 });
+
+router.beforeEach(async (to, from) => {
+  if (!localStorage.getItem("pin") && to.name !== 'Sign In') {
+    return '/sign-in'
+  }
+})
 
 export default router;

@@ -23,10 +23,8 @@
                 </div>
                 <div class="card-body">
                   <form role="form" class="text-start">
-                    <label>Email</label>
-                    <vsud-input type="email" placeholder="Email" name="email" />
-                    <label>Password</label>
-                    <vsud-input type="password" placeholder="Password" name="password" />
+                    <label>PIN</label>
+                    <vsud-input type="password" placeholder="PIN" name="password" />
                     <vsud-switch id="rememberMe" checked>Remember me</vsud-switch>
                     <div class="text-center">
                       <vsud-button

@@ -33,13 +33,6 @@
           </template>
         </sidenav-collapse>
       </li>
-      <li class="nav-item">
-        <sidenav-collapse nav-text="RTL" :to="{ name: 'Rtl' }">
-          <template #icon>
-            <icon name="rtl-page" />
-          </template>
-        </sidenav-collapse>
-      </li>
       <li class="mt-3 nav-item">
         <h6
           class="text-xs ps-4 text-uppercase font-weight-bolder opacity-6"
