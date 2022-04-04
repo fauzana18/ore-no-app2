@@ -38,7 +38,7 @@ export default {
                     label: 'Home',
                     items: [
                         {label: 'Dashboard', icon: 'pi pi-fw pi-home', to: '/'},
-                        {label: 'Catatan Keuangan', icon: 'pi pi-fw pi-money-bill', to: '/'},
+                        {label: 'Catatan Keuangan', icon: 'pi pi-fw pi-money-bill', to: '/finance'},
                     ]
                 },
 				{
