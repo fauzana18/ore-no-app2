@@ -18,18 +18,24 @@
 					</template>
 				</Toolbar>
 
-				<DataTable v-if="!loading" ref="dt" :value="transactions" v-model:selection="selectedProducts" dataKey="id" :paginator="true" :rows="10" :filters="filters"
+				<DataTable ref="dt" :value="transactions" v-model:selection="selectedProducts" dataKey="id" :paginator="true" :rows="10" :filters="filters" :loading="loading"
 							paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown" :rowsPerPageOptions="[5,10,25]"
 							currentPageReportTemplate="Showing {first} to {last} of {totalRecords} products" responsiveLayout="scroll">
 					<template #header>
 						<div class="flex flex-column md:flex-row md:justify-content-between md:align-items-center">
-							<h5 class="m-0">Manage Products</h5>
+							<h5 class="m-0">Catatan Keuangan</h5>
 							<span class="block mt-2 md:mt-0 p-input-icon-left">
                                 <i class="pi pi-search" />
                                 <InputText v-model="filters['global'].value" placeholder="Search..." />
                             </span>
 						</div>
 					</template>
+					<template #empty>
+                        Data kosong.
+                    </template>
+                    <template #loading>
+                        Memuat data. Mohon tunggu.
+                    </template>
 
 					<Column selectionMode="multiple" headerStyle="width: 3rem"></Column>
 					<Column field="created" header="Tanggal" :sortable="true" headerStyle="width:14%; min-width:10rem;">
@@ -69,9 +75,6 @@
 						</template>
 					</Column>
 				</DataTable>
-				<div v-else style="display: flex; justify-content: center;">
-					<i class="pi pi-spin pi-spinner" style="font-size: 300px"></i>
-				</div>
 
 				<Dialog v-model:visible="productDialog" :style="{width: '450px'}" header="Product Details" :modal="true" class="p-fluid">
 					<img :src="'images/product/' + product.image" :alt="product.image" v-if="product.image" width="150" class="mt-0 mx-auto mb-5 block shadow-2" />
@@ -294,19 +297,10 @@ export default {
 			this.loading = false
         },
 		dateHandler(date) {
-			const day = {
-				Mon: 'Senin',
-				Tue: 'Selasa',
-				Wed: 'Rabu',
-				Thu: 'Kamis',
-				Fri: `Jum'at`,
-				Sat: 'Sabtu',
-				Sun: 'Minggu',
-			}
+			const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }
 			const d = new Date(date)
-			const dateString = d.toDateString()
-			const splitted = dateString.split(' ')
-			return `${day[splitted[0]]}, ${splitted[2]} ${splitted[1]} ${splitted[3]}`
+			const dateString = d.toLocaleDateString('id-ID', options)
+			return dateString
 		},
 		fileHandler(e) {
 			console.log(e.files[0])
