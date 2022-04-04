@@ -36,9 +36,10 @@ export default {
             menu : [
                 {
                     label: 'Home',
-                    items: [{
-                        label: 'Dashboard', icon: 'pi pi-fw pi-home', to: '/'
-                    }]
+                    items: [
+                        {label: 'Dashboard', icon: 'pi pi-fw pi-home', to: '/'},
+                        {label: 'Catatan Keuangan', icon: 'pi pi-fw pi-money-bill', to: '/'},
+                    ]
                 },
 				{
 					label: 'UI Components', icon: 'pi pi-fw pi-sitemap',
@@ -136,7 +137,7 @@ export default {
                 {
                     label: 'Get Started', 
                     items: [
-                        {label: 'Documentation', icon: 'pi pi-fw pi-question', command: () => {window.location = "#/documentation"}},
+                        {label: 'Documentation', icon: 'pi pi-fw pi-question', command: () => {window.location = "/documentation"}},
                         {label: 'View Source', icon: 'pi pi-fw pi-search', command: () => {window.location = "https://github.com/primefaces/sakai-vue"}}
                     ]
                 }

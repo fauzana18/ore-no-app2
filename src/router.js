@@ -173,4 +173,10 @@ const router = createRouter({
     routes,
 });
 
+router.beforeEach(async (to, from) => {
+    if (!localStorage.getItem("pin") && to.name !== 'login') {
+      return '/login'
+    }
+})
+
 export default router;
