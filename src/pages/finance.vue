@@ -18,9 +18,9 @@
 					</template>
 				</Toolbar>
 
-				<DataTable ref="dt" :value="transactions" v-model:selection="selectedProducts" dataKey="id" :paginator="true" :rows="10" :filters="filters" :loading="loading"
+				<DataTable ref="dt" :value="transactions" :lazy="true" v-model:selection="selectedProducts" dataKey="id" :paginator="true" :rows="10" :filters="filters" :loading="loading"
 							paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown" :rowsPerPageOptions="[5,10,25]"
-							currentPageReportTemplate="Showing {first} to {last} of {totalRecords} products" responsiveLayout="scroll">
+							currentPageReportTemplate="Showing {first} to {last} of {totalRecords} products" responsiveLayout="stack" :totalRecords="totalRecords" @page="onPage($event)">
 					<template #header>
 						<div class="flex flex-column md:flex-row md:justify-content-between md:align-items-center">
 							<h5 class="m-0">Catatan Keuangan</h5>
@@ -40,38 +40,35 @@
 					<Column selectionMode="multiple" headerStyle="width: 3rem"></Column>
 					<Column field="created" header="Tanggal" :sortable="true" headerStyle="width:14%; min-width:10rem;">
 						<template #body="slotProps">
-							<span class="p-column-title">Tanggal</span>
 							{{dateHandler(slotProps.data.created)}}
 						</template>
 					</Column>
 					<Column field="name" header="Judul" :sortable="true" headerStyle="width:30%; min-width:10rem;">
 						<template #body="slotProps">
-							<span class="p-column-title">Judul</span>
 							{{slotProps.data.name}}
 						</template>
 					</Column>
 					<Column field="amount" header="Jumlah" headerStyle="width:14%; min-width:10rem;">
 						<template #body="slotProps">
-							<span class="p-column-title">Jumlah</span>
 							{{formatCurrency(slotProps.data.amount)}}
 						</template>
 					</Column>
 					<Column field="category" header="Tipe" :sortable="true" headerStyle="width:14%; min-width:8rem;">
 						<template #body="slotProps">
-							<span class="p-column-title">Tipe</span>
 							{{slotProps.data.category.type}}
 						</template>
 					</Column>
 					<Column field="category" header="Kategori" :sortable="true" headerStyle="width:14%; min-width:10rem;">
 						<template #body="slotProps">
-							<span class="p-column-title">Kategori</span>
 							{{slotProps.data.category.name}}
 						</template>
 					</Column>
 					<Column headerStyle="min-width:10rem;">
 						<template #body="slotProps">
-							<Button icon="pi pi-pencil" class="p-button-rounded p-button-success mr-2" @click="editProduct(slotProps.data)" />
-							<Button icon="pi pi-trash" class="p-button-rounded p-button-warning mt-2" @click="confirmDeleteProduct(slotProps.data)" />
+							<div>
+								<Button icon="pi pi-pencil" class="p-button-rounded p-button-success mr-2" @click="editProduct(slotProps.data)" />
+								<Button icon="pi pi-trash" class="p-button-rounded p-button-warning mt-2" @click="confirmDeleteProduct(slotProps.data)" />
+							</div>
 						</template>
 					</Column>
 				</DataTable>
@@ -175,6 +172,7 @@ import {FilterMatchMode} from 'primevue/api';
 import ProductService from '../service/ProductService';
 import axios from "axios"
 import FinanceService from '../service/FinanceService'
+import { profileStore } from '../store/finance.js'
 
 export default {
 	data() {
@@ -193,7 +191,10 @@ export default {
 				{label: 'OUTOFSTOCK', value: 'outofstock'}
 			],
 			transactions: [],
-			loading: true
+			loading: true,
+			totalRecords: 0,
+			lazyParams: {},
+			profiles: profileStore()
 		}
 	},
 	productService: null,
@@ -205,7 +206,28 @@ export default {
 	},
 	async mounted() {
 		this.productService.getProducts().then(data => this.products = data);
+		this.lazyParams = {
+            offset: 0,
+            limit: this.$refs.dt.rows,
+            sortField: null,
+            sortOrder: null,
+			profile_id: this.profiles.list[this.profiles.selected] ? this.profiles.list[this.profiles.selected].id : 1
+        }
         await this.getList()
+	},
+	watch: {
+		'profiles.selected': {
+			async handler() {
+				this.lazyParams = {
+					offset: 0,
+					limit: this.$refs.dt.rows,
+					sortField: null,
+					sortOrder: null,
+					profile_id: this.profiles.list[this.profiles.selected].id || 1
+				}
+				await this.getList()
+			}
+		}
 	},
 	methods: {
 		formatCurrency(value) {
@@ -292,7 +314,8 @@ export default {
             }
         },
         async getList() {
-            const list = await this.FinanceService.getTransactionList()
+			this.loading = true
+            const list = await this.FinanceService.getTransactionList(this.lazyParams)
             this.transactions = list.data.result
 			this.loading = false
         },

@@ -283,8 +283,8 @@ import EventBus from './AppEventBus';
 
 			EventBus.on('theme-change', this.themeChangeListener);
 			EventBus.emit('theme-change', {
-				theme: localStorage.getItem('theme'),
-				dark: localStorage.getItem('dark')
+				theme: localStorage.getItem('theme') || 'bootstrap4-light-blue',
+				dark: localStorage.getItem('dark') || false
 			})
 		},
 		methods: {

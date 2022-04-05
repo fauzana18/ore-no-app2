@@ -32,9 +32,12 @@
 					<span>Profile</span>
 				</button>
 				<OverlayPanel v-if="profiles.list.length" ref="op" appendTo="body" :showCloseIcon="false">
-					<Card v-for="(items, i) of profiles.list" class="card-width" :key="i" style="cursor: pointer;" @click="selectProfile(items.id)">
+					<Card v-for="(items, i) of profiles.list" class="card-width" :key="i" style="cursor: pointer;" @click="selectProfile(i)">
 						<template v-slot:content>
-							<p class="line-height-3 m-0">{{items.name}}</p>
+							<div style="display: flex; align-items: center; justify-content: space-between;">
+								<p class="line-height-3 m-0">{{items.name}}</p>
+								<i v-if="profiles.selected == i" class="pi pi-check" style="font-size: 2rem"></i>
+							</div>
 						</template>
 					</Card>
 				</OverlayPanel>
@@ -67,8 +70,8 @@ export default {
 				this.$refs.op.toggle(event);
 			}
 		},
-		selectProfile(profile) {
-			console.log(profile)
+		selectProfile(i) {
+			this.profiles.select(i)
 			this.$refs.op.hide()
 		}
     },
