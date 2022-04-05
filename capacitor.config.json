@@ -1,0 +1,6 @@
+{
+  "appId": "com.example.app",
+  "appName": "ore-no-app-mobile",
+  "webDir": "dist",
+  "bundledWebRuntime": false
+}

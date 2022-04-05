@@ -20,6 +20,9 @@
     "vue-router": "^4.0.0-0"
   },
   "devDependencies": {
+    "@capacitor/android": "^3.4.3",
+    "@capacitor/cli": "^3.4.3",
+    "@capacitor/core": "^3.4.3",
     "@vue/cli-plugin-router": "~4.5.0",
     "@vue/cli-service": "~4.5.0",
     "@vue/compiler-sfc": "^3.0.0",
