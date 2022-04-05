@@ -27,17 +27,31 @@
 				</button>
 			</li>
 			<li>
-				<button class="p-link layout-topbar-button">
+				<button class="p-link layout-topbar-button" @click="toggleProfile">
 					<i class="pi pi-user"></i>
 					<span>Profile</span>
 				</button>
+				<OverlayPanel v-if="profiles.list.length" ref="op" appendTo="body" :showCloseIcon="false">
+					<Card v-for="(items, i) of profiles.list" class="card-width" :key="i" style="cursor: pointer;" @click="selectProfile(items.id)">
+						<template v-slot:content>
+							<p class="line-height-3 m-0">{{items.name}}</p>
+						</template>
+					</Card>
+				</OverlayPanel>
 			</li>
 		</ul>
 	</div>
 </template>
 
 <script>
+import { profileStore } from './store/finance.js'
+
 export default {
+	data() {
+		return {
+			profiles: profileStore()
+		}
+	},
     methods: {
         onMenuToggle(event) {
             this.$emit('menu-toggle', event);
@@ -47,6 +61,15 @@ export default {
         },
 		topbarImage() {
 			return this.$appState.darkTheme ? 'images/logo-white.svg' : 'images/logo-dark.svg';
+		},
+		toggleProfile(event) {
+			if(this.profiles.list.length) {
+				this.$refs.op.toggle(event);
+			}
+		},
+		selectProfile(profile) {
+			console.log(profile)
+			this.$refs.op.hide()
 		}
     },
 	computed: {
@@ -56,3 +79,15 @@ export default {
 	}
 }
 </script>
+
+<style>
+	.card-width {
+		width: 300px;
+	}
+
+	@media screen and (max-width: 575px) {
+		.card-width {
+			width: 200px;
+		}
+	}
+</style>

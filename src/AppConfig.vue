@@ -282,6 +282,10 @@ import EventBus from './AppEventBus';
 			};
 
 			EventBus.on('theme-change', this.themeChangeListener);
+			EventBus.emit('theme-change', {
+				theme: localStorage.getItem('theme'),
+				dark: localStorage.getItem('dark')
+			})
 		},
 		methods: {
 			toggleConfigurator(event) {
@@ -340,6 +344,8 @@ import EventBus from './AppEventBus';
 			},
 			changeTheme(event, theme, dark) {
 				EventBus.emit('theme-change', { theme: theme, dark: dark });
+				localStorage.setItem('theme', theme)
+				localStorage.setItem('dark', dark)
 				event.preventDefault();
 			}
 		},

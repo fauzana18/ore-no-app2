@@ -24,6 +24,7 @@ import AppTopBar from './AppTopbar.vue';
 import AppMenu from './AppMenu.vue';
 import AppConfig from './AppConfig.vue';
 import AppFooter from './AppFooter.vue';
+import { profileStore, categoryStore } from './store/finance.js'
 
 export default {
     emits: ['change-theme'],
@@ -219,6 +220,12 @@ export default {
             return true;
         }
     },
+    async mounted() {
+        const profiles = profileStore()
+        const category = categoryStore()
+		await profiles.getList()
+		await category.getList()
+	},
     computed: {
         containerClass() {
             return ['layout-wrapper', {
