@@ -12,7 +12,7 @@
 					</template>
 
 					<template v-slot:end>
-						<FileUpload mode="basic" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" 
+						<FileUpload mode="basic" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" :disabled="submitting"
 						:maxFileSize="1000000" label="Import" chooseLabel="Import" class="mr-2 inline-block" :customUpload="true" @uploader="fileHandler" />
 						<Button label="Export" icon="pi pi-upload" class="p-button-help mr-2" @click="exportCSV($event)"  />
 						<Button icon="pi pi-refresh" class="p-button-rounded p-button-info" @click="getList()"/>
@@ -21,7 +21,7 @@
 
 				<DataTable ref="dt" :value="transactions" :lazy="true" v-model:selection="selectedTransactions" dataKey="id" :paginator="true" :rows="10" :filters="filters" :loading="loading"
 							paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown" :rowsPerPageOptions="[5,10,25]"
-							currentPageReportTemplate="Showing {first} to {last} of {totalRecords} products" responsiveLayout="stack" :totalRecords="totalRecords" @page="onPage($event)">
+							currentPageReportTemplate="Showing {first} to {last} of {totalRecords} transactions" responsiveLayout="stack" :totalRecords="totalRecords" @page="onPage($event)">
 					<template #header>
 						<div class="flex flex-column md:flex-row md:justify-content-between md:align-items-center">
 							<h5 class="m-0">Catatan Keuangan</h5>
@@ -138,6 +138,7 @@ import ProductService from '../service/ProductService'
 import axios from "axios"
 import FinanceService from '../service/FinanceService'
 import { profileStore, categoryStore } from '../store/finance.js'
+import * as XLSX from 'xlsx'
 
 export default {
 	data() {
@@ -175,7 +176,7 @@ export default {
 	created() {
 		this.productService = new ProductService()
 		this.FinanceService = new FinanceService()
-		this.initFilters();
+		this.initFilters()
 	},
 	async mounted() {
 		this.productService.getProducts().then(data => this.products = data)
@@ -220,7 +221,7 @@ export default {
 		formatCurrency(value) {
 			if(value)
 				return value.toLocaleString('id-ID', {style: 'currency', currency: 'IDR'})
-			return;
+			return
 		},
 		openNew() {
 			this.transaction = {
@@ -270,7 +271,7 @@ export default {
 			}
 			catch(err) {
 				this.submitStatus = 'error'
-				this.submitMessage = err.response.data.message
+				this.submitMessage = err.response ? err.response.data.message : 'Data gagal dibuat.'
 			}
 
 			this.submitting = false
@@ -279,7 +280,7 @@ export default {
 			this.submitStatus = ''
 			transaction.created = new Date(transaction.created)
 			transaction.type = this.category.type.find(each => each.name == transaction.category.type)
-			this.transaction = {...transaction};
+			this.transaction = {...transaction}
 			this.modalHeader = 'Ubah Transaksi'
 			this.transactionDialog = true
 		},
@@ -307,14 +308,14 @@ export default {
 			}
 			catch(err) {
 				stat = 'error'
-				message = err.response.data.message
+				message = err.response ? err.response.data.message : 'Data gagal dihapus.'
 				summary = 'Gagal'
 			}
 
 			this.deleteTransactionDialog = false
 			this.$toast.add({severity: stat, summary, detail: message, life: 3000})
 			this.submitting = false
-			await this.getList()
+			if(stat == 'success') await this.getList()
 		},
 		exportCSV() {
 			this.$refs.dt.exportCSV()
@@ -353,7 +354,7 @@ export default {
 			}
 			catch(err) {
 				stat = 'error'
-				message = err.response.data.message
+				message = err.response ? err.response.data.message : 'Data gagal dihapus.'
 				summary = 'Gagal'
 			}
 
@@ -361,7 +362,7 @@ export default {
 			this.submitting = false
 			this.selectedTransactions = null
 			this.$toast.add({severity: stat, summary, detail: message, life: 3000})
-			await this.getList()
+			if(stat == 'success') await this.getList()
 		},
 		initFilters() {
             this.filters = {
@@ -381,8 +382,74 @@ export default {
 			const dateString = d.toLocaleDateString('id-ID', options)
 			return dateString
 		},
-		fileHandler(e) {
-			console.log(e.files[0])
+		async fileHandler(e) {
+			let hasil = await this.getDataExcel(e.files[0])
+			let ready = []
+			hasil.forEach((each, i) => {
+				if(each.created) {
+					const findCategory = this.category.list.find(el => el.name == each.category)
+					let obj = {
+						name: each.name,
+						category_id: findCategory.id,
+						created: new Date(each.created),
+						amount: each.out ? each.out : each.in,
+						profile_id: this.profiles.list[this.profiles.selected].id
+					}
+					obj.amount = parseInt(obj.amount.split(',')[0].substr(2).replace(".", ""))
+					ready.push(obj)
+				}
+			})
+			await this.importTransaction(ready)
+		},
+		getDataExcel(file) {
+            return new Promise(resolve=>{
+                let reader = new FileReader()
+
+                reader.onload = function(e) {
+                    let data = e.target.result
+                    let workbook = XLSX.read(data, {
+                      type: 'binary'
+                    })
+                    workbook.SheetNames.forEach(function(sheetName) {
+                        let rowObject = XLSX.utils.sheet_to_row_object_array(workbook.Sheets[sheetName])
+                        resolve(rowObject)
+                    })
+              
+                }
+    
+                reader.onerror = function() {
+                }
+              
+                reader.readAsBinaryString(file)
+            })
+        },
+		async importTransaction(body) {
+			let stat, message, summary
+			this.submitting = true
+
+			try {
+				const res = await this.FinanceService.importTransaction(body)
+
+				if(res.status == 200) {
+					stat = 'success'
+					message = res.data.message
+					summary = 'Sukses'
+				}
+				else {
+					stat = 'error'
+					message = res.data.message
+					summary = 'Gagal'
+				}
+			}
+			catch(err) {
+				stat = 'error'
+				message = err.response ? err.response.data.message : 'Data gagal disimpan.'
+				summary = 'Gagal'
+			}
+
+			this.$toast.add({severity: stat, summary, detail: message, life: 3000})
+			this.submitting = false
+			if(stat == 'success') await this.getList()
 		},
 		async refresh() {
 			if(this.submitStatus == 'success') {

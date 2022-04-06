@@ -21,6 +21,10 @@ export default class FinanceService {
         return axios.delete(`${process.env.VUE_APP_BASE_URL}/finance/transaction/${id}`)
     }
 
+    importTransaction(body) {
+        return axios.post(`${process.env.VUE_APP_BASE_URL}/finance/importtransaction`, body)
+    }
+
     getProfileList() {
         return axios.get(`${process.env.VUE_APP_BASE_URL}/finance/profile`)
     }
