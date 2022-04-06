@@ -19,16 +19,19 @@
 					</template>
 				</Toolbar>
 
-				<DataTable ref="dt" :value="transactions" :lazy="true" v-model:selection="selectedTransactions" dataKey="id" :paginator="true" :rows="10" :filters="filters" :loading="loading"
+				<DataTable ref="dt" :value="transactions" :lazy="true" v-model:selection="selectedTransactions" dataKey="id" :paginator="true" :rows="10" :loading="loading" @sort="onSort($event)"
 							paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown" :rowsPerPageOptions="[5,10,25]"
 							currentPageReportTemplate="Showing {first} to {last} of {totalRecords} transactions" responsiveLayout="stack" :totalRecords="totalRecords" @page="onPage($event)">
 					<template #header>
 						<div class="flex flex-column md:flex-row md:justify-content-between md:align-items-center">
 							<h5 class="m-0">Catatan Keuangan</h5>
-							<span class="block mt-2 md:mt-0 p-input-icon-left">
-                                <i class="pi pi-search" />
-                                <InputText v-model="filters['global'].value" placeholder="Search..." />
-                            </span>
+							<div style="display: flex;">
+								<Dropdown v-model="filters.category_id" :options="category.list" optionLabel="name" placeholder="Kategori" class="mr-2" />
+								<span class="block mt-2 md:mt-0 p-input-icon-left">
+									<i class="pi pi-search" />
+									<InputText v-model="filters.name" placeholder="Pencarian..." />
+								</span>
+							</div>
 						</div>
 					</template>
 					<template #empty>
@@ -49,17 +52,17 @@
 							{{slotProps.data.name}}
 						</template>
 					</Column>
-					<Column field="amount" header="Jumlah" headerStyle="width:14%; min-width:10rem;">
+					<Column field="amount" header="Jumlah" :sortable="true" headerStyle="width:14%; min-width:10rem;">
 						<template #body="slotProps">
 							{{formatCurrency(slotProps.data.amount)}}
 						</template>
 					</Column>
-					<Column field="category" header="Tipe" :sortable="true" headerStyle="width:14%; min-width:8rem;">
+					<Column field="category.type" header="Tipe" headerStyle="width:14%; min-width:8rem;">
 						<template #body="slotProps">
 							{{slotProps.data.category.type}}
 						</template>
 					</Column>
-					<Column field="category" header="Kategori" :sortable="true" headerStyle="width:14%; min-width:10rem;">
+					<Column field="category_id" header="Kategori" :sortable="true" headerStyle="width:14%; min-width:10rem;">
 						<template #body="slotProps">
 							{{slotProps.data.category.name}}
 						</template>
@@ -133,9 +136,6 @@
 </template>
 
 <script>
-import {FilterMatchMode} from 'primevue/api'
-import ProductService from '../service/ProductService'
-import axios from "axios"
 import FinanceService from '../service/FinanceService'
 import { profileStore, categoryStore } from '../store/finance.js'
 import * as XLSX from 'xlsx'
@@ -143,20 +143,13 @@ import * as XLSX from 'xlsx'
 export default {
 	data() {
 		return {
-			products: null,
 			transactionDialog: false,
 			deleteTransactionDialog: false,
 			deleteTransactionsDialog: false,
-			product: {},
 			selectedTransactions: null,
 			filters: {},
 			submitted: false,
 			submitting: false,
-			statuses: [
-				{label: 'INSTOCK', value: 'instock'},
-				{label: 'LOWSTOCK', value: 'lowstock'},
-				{label: 'OUTOFSTOCK', value: 'outofstock'}
-			],
 			transactions: [],
 			transaction: {},
 			loading: true,
@@ -171,20 +164,16 @@ export default {
 			toDelete: {}
 		}
 	},
-	productService: null,
     FinanceService: null,
 	created() {
-		this.productService = new ProductService()
 		this.FinanceService = new FinanceService()
 		this.initFilters()
 	},
 	async mounted() {
-		this.productService.getProducts().then(data => this.products = data)
 		this.lazyParams = {
             offset: 0,
             limit: this.$refs.dt.rows,
-            sortField: null,
-            sortOrder: null,
+            order: null,
 			profile_id: this.profiles.list[this.profiles.selected] ? this.profiles.list[this.profiles.selected].id : 1
         }
         await this.getList()
@@ -196,8 +185,7 @@ export default {
 				this.lazyParams = {
 					offset: 0,
 					limit: this.$refs.dt.rows,
-					sortField: null,
-					sortOrder: null,
+					order: null,
 					profile_id: this.profiles.list[this.profiles.selected].id || 1
 				}
 				await this.getList()
@@ -364,11 +352,6 @@ export default {
 			this.$toast.add({severity: stat, summary, detail: message, life: 3000})
 			if(stat == 'success') await this.getList()
 		},
-		initFilters() {
-            this.filters = {
-                'global': {value: null, matchMode: FilterMatchMode.CONTAINS},
-            }
-        },
         async getList() {
 			this.loading = true
             const list = await this.FinanceService.getTransactionList(this.lazyParams)
@@ -455,7 +438,43 @@ export default {
 			if(this.submitStatus == 'success') {
 				await this.getList()
 			}
-		}
+		},
+		async onPage(e) {
+			this.lazyParams = {
+				offset: e.first,
+				limit: this.$refs.dt.rows,
+				order: e.sortField ? [e.sortField, e.sortOrder == 1 ? 'ASC' : 'DESC'] : ['created', 'DESC'],
+				profile_id: this.profiles.list[this.profiles.selected] ? this.profiles.list[this.profiles.selected].id : 1
+			}
+			await this.getList()
+		},
+		async onSort(e) {
+			this.lazyParams = {
+				offset: e.first,
+				limit: this.$refs.dt.rows,
+				order: [e.sortField, e.sortOrder == 1 ? 'ASC' : 'DESC'],
+				profile_id: this.profiles.list[this.profiles.selected] ? this.profiles.list[this.profiles.selected].id : 1
+			}
+			await this.getList()
+		},
+		async onFilter(e) {
+			console.log(e)
+			this.lazyParams = {
+				offset: e.first,
+				limit: this.$refs.dt.rows,
+				order: e.sortField ? [e.sortField, e.sortOrder == 1 ? 'ASC' : 'DESC'] : ['created', 'DESC'],
+				profile_id: this.profiles.list[this.profiles.selected] ? this.profiles.list[this.profiles.selected].id : 1
+			}
+			// await this.getList()
+		},
+		initFilters() {
+			this.filters = {
+                name: '',
+                created: null,
+                category_id: null,
+                amount: 0,
+            }
+		},
 	}
 }
 </script>
