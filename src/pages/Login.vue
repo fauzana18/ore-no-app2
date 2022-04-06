@@ -14,7 +14,9 @@
                 
                     <div class="w-full md:w-10 mx-auto">
                         <label for="password1" class="block text-900 font-medium text-xl mb-2">PIN</label>
-                        <Password id="password1" v-model="password" placeholder="PIN" :toggleMask="true" class="w-full mb-3" inputClass="w-full" inputStyle="padding:1rem"></Password>
+                        <Password id="password1" v-model="password" placeholder="PIN" :toggleMask="true" :feedback="false" 
+                        class="w-full mb-3" inputClass="w-full" inputStyle="padding:1rem" @keydown="handleEnter"></Password>
+                        <Message v-if="wrong" severity="error">PIN salah!</Message>
                         <Button label="Sign In" class="w-full p-3 text-xl" @click="login"></button>
                     </div>
                 </div>
@@ -27,7 +29,8 @@
 export default {
     data() {
         return {
-            password: ''
+            password: '',
+            wrong: false
         }
     },
     computed: {
@@ -42,6 +45,10 @@ export default {
                 localStorage.setItem("pin", this.password)
                 this.$router.push({name: 'dashboard'})
             }
+            else this.wrong = true
+        },
+        handleEnter(e) {
+            if(e.key == 'Enter') this.login()
         }
     }
 }

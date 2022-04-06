@@ -6,8 +6,8 @@
 				<Toolbar class="mb-4">
 					<template v-slot:start>
 						<div class="my-2">
-							<Button label="New" icon="pi pi-plus" class="p-button-success mr-2" @click="openNew" />
-							<Button label="Delete" icon="pi pi-trash" class="p-button-danger" @click="confirmDeleteSelected" :disabled="!selectedProducts || !selectedProducts.length" />
+							<Button label="Tambah" icon="pi pi-plus" class="p-button-success mr-2" @click="openNew" />
+							<Button label="Hapus" icon="pi pi-trash" class="p-button-danger" @click="confirmDeleteSelected" :disabled="!selectedProducts || !selectedProducts.length" />
 						</div>
 					</template>
 
@@ -73,21 +73,26 @@
 					</Column>
 				</DataTable>
 
-				<Dialog v-model:visible="productDialog" :style="{width: '450px'}" header="Product Details" :modal="true" class="p-fluid">
-					<img :src="'images/product/' + product.image" :alt="product.image" v-if="product.image" width="150" class="mt-0 mx-auto mb-5 block shadow-2" />
+				<Dialog v-model:visible="productDialog" :style="{width: '450px'}" :header="modalHeader" :modal="true" class="p-fluid">
 					<div class="field">
-						<label for="name">Name</label>
-						<InputText id="name" v-model.trim="product.name" required="true" autofocus :class="{'p-invalid': submitted && !product.name}" />
+						<label for="name">Tanggal</label>
+						<Calendar :showIcon="true" :showButtonBar="true" v-model="transaction.created" dateFormat="dd MM yy"></Calendar>
+					</div>
+					<div class="field">
+						<label for="name">Tipe</label>
+						<Dropdown v-model="transaction.type" :options="category.type" optionLabel="name" placeholder="Pilih Tipe" required="true" />
+						<!-- <InputText id="name" v-model.trim="product.name" required="true" autofocus :class="{'p-invalid': submitted && !product.name}" /> -->
 						<small class="p-invalid" v-if="submitted && !product.name">Name is required.</small>
 					</div>
 					<div class="field">
-						<label for="description">Description</label>
-						<Textarea id="description" v-model="product.description" required="true" rows="3" cols="20" />
+						<label for="description">Kategori</label>
+						<Dropdown v-model="transaction.category" :options="categoryOptions" optionLabel="name" placeholder="Pilih Kategori" required="true" />
+						<!-- <Textarea id="description" v-model="product.description" required="true" rows="3" cols="20" /> -->
 					</div>
-
 					<div class="field">
-						<label for="inventoryStatus" class="mb-3">Inventory Status</label>
-						<Dropdown id="inventoryStatus" v-model="product.inventoryStatus" :options="statuses" optionLabel="label" placeholder="Select a Status">
+						<label for="inventoryStatus">Judul</label>
+						<InputText id="name" v-model.trim="transaction.name" required="true" autofocus :class="{'p-invalid': submitted && !transaction.name}" />
+						<!-- <Dropdown id="inventoryStatus" v-model="product.inventoryStatus" :options="statuses" optionLabel="label" placeholder="Select a Status">
 							<template #value="slotProps">
 								<div v-if="slotProps.value && slotProps.value.value">
 									<span :class="'product-badge status-' +slotProps.value.value">{{slotProps.value.label}}</span>
@@ -99,44 +104,16 @@
 									{{slotProps.placeholder}}
 								</span>
 							</template>
-						</Dropdown>
+						</Dropdown> -->
 					</div>
-
 					<div class="field">
-						<label class="mb-3">Category</label>
-						<div class="formgrid grid">
-							<div class="field-radiobutton col-6">
-								<RadioButton id="category1" name="category" value="Accessories" v-model="product.category" />
-								<label for="category1">Accessories</label>
-							</div>
-							<div class="field-radiobutton col-6">
-								<RadioButton id="category2" name="category" value="Clothing" v-model="product.category" />
-								<label for="category2">Clothing</label>
-							</div>
-							<div class="field-radiobutton col-6">
-								<RadioButton id="category3" name="category" value="Electronics" v-model="product.category" />
-								<label for="category3">Electronics</label>
-							</div>
-							<div class="field-radiobutton col-6">
-								<RadioButton id="category4" name="category" value="Fitness" v-model="product.category" />
-								<label for="category4">Fitness</label>
-							</div>
-						</div>
+						<label for="name">Jumlah</label>
+						<InputNumber id="price" v-model="transaction.amount" mode="currency" currency="IDR" locale="id-ID" />
 					</div>
 
-					<div class="formgrid grid">
-						<div class="field col">
-							<label for="price">Price</label>
-							<InputNumber id="price" v-model="product.price" mode="currency" currency="USD" locale="en-US" />
-						</div>
-						<div class="field col">
-							<label for="quantity">Quantity</label>
-							<InputNumber id="quantity" v-model="product.quantity" integeronly />
-						</div>
-					</div>
 					<template #footer>
-						<Button label="Cancel" icon="pi pi-times" class="p-button-text" @click="hideDialog"/>
-						<Button label="Save" icon="pi pi-check" class="p-button-text" @click="saveProduct" />
+						<Button label="Batal" icon="pi pi-times" class="p-button-text" @click="hideDialog"/>
+						<Button label="Simpan" icon="pi pi-check" class="p-button-text" @click="saveProduct" />
 					</template>
 				</Dialog>
 
@@ -172,7 +149,7 @@ import {FilterMatchMode} from 'primevue/api';
 import ProductService from '../service/ProductService';
 import axios from "axios"
 import FinanceService from '../service/FinanceService'
-import { profileStore } from '../store/finance.js'
+import { profileStore, categoryStore } from '../store/finance.js'
 
 export default {
 	data() {
@@ -191,17 +168,22 @@ export default {
 				{label: 'OUTOFSTOCK', value: 'outofstock'}
 			],
 			transactions: [],
+			transaction: {},
 			loading: true,
 			totalRecords: 0,
 			lazyParams: {},
-			profiles: profileStore()
+			profiles: profileStore(),
+			category: categoryStore(),
+			categoryOptions: [],
+			calendarValue: null,
+			modalHeader: 'Tambah Transaksi'
 		}
 	},
 	productService: null,
     FinanceService: null,
 	created() {
-		this.productService = new ProductService();
-		this.FinanceService = new FinanceService();
+		this.productService = new ProductService()
+		this.FinanceService = new FinanceService()
 		this.initFilters();
 	},
 	async mounted() {
@@ -214,6 +196,7 @@ export default {
 			profile_id: this.profiles.list[this.profiles.selected] ? this.profiles.list[this.profiles.selected].id : 1
         }
         await this.getList()
+		this.transaction.created = new Date()
 	},
 	watch: {
 		'profiles.selected': {
@@ -227,6 +210,19 @@ export default {
 				}
 				await this.getList()
 			}
+		},
+		'category.list': {
+			handler() {
+				this.transaction.type = this.category.type[0]
+				this.categoryOptions = this.category.list.filter(each => each.type == this.transaction.type.name)
+				this.transaction.category = this.categoryOptions[0]
+			}
+		},
+		'transaction.type': {
+			handler() {
+				this.categoryOptions = this.category.list.filter(each => each.type == this.transaction.type.name)
+				this.transaction.category = this.categoryOptions[0]
+			}
 		}
 	},
 	methods: {
@@ -238,6 +234,7 @@ export default {
 		openNew() {
 			this.product = {};
 			this.submitted = false;
+			this.modalHeader = 'Tambah Transaksi'
 			this.productDialog = true;
 		},
 		hideDialog() {
@@ -266,6 +263,7 @@ export default {
 		},
 		editProduct(product) {
 			this.product = {...product};
+			this.modalHeader = 'Ubah Transaksi'
 			this.productDialog = true;
 		},
 		confirmDeleteProduct(product) {

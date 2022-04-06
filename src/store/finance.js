@@ -22,12 +22,23 @@ export const profileStore = defineStore('profiles', {
 
 export const categoryStore= defineStore('category', {
     state: () => {
-        return { list: [] }
+        return {
+            list: [],
+            type: []
+        }
     },
     actions: {
         async getList() {
             const list = await financeService.getCategoryList()
             this.list = list.data.result
+            this.list.forEach(each => {
+                if(!this.type.includes(each.type)) {
+                    this.type.push(each.type)
+                }
+            })
+            this.type.forEach((each, i) => {
+                this.type[i] = { name: each, code: i}
+            })
         },
     },
 })
