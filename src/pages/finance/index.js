@@ -353,20 +353,24 @@ export default {
 								break
 							case 2:
 								date.setDate(date.getDate() - 7)
+                                date.setHours(0, 0, 0, 0)
 								obj[each] = { gte: date }
 								break
 							case 3:
 								date.setDate(date.getDate() - 30)
+                                date.setHours(0, 0, 0, 0)
 								obj[each] = { gte: date }
 								break
 							case 4:
-								obj[each] = { gte: new Date(y, m, 1), lte: new Date(y, m + 1, 0) }
+								obj[each] = { gte: new Date(y, m, 0), lte: new Date(y, m + 1, 0) }
 								break
 							case 5:
-								obj[each] = { gte: new Date(y, m - 1, 1), lte: new Date(y, m, 0) }
+								obj[each] = { gte: new Date(y, m - 1, 0), lte: new Date(y, m, 0) }
 								break
 							case 6:
-								obj[each] = { gte: this.dateStart, lte: this.dateEnd }
+                                const start = new Date(this.dateStart)
+                                start.setDate(start.getDate() - 1)
+								obj[each] = { gte: start, lte: this.dateEnd }
 								break
 						}
 						break
