@@ -1,0 +1,25 @@
+@import '../../assets/demo/badges.scss';
+
+.filter {
+	display: flex;
+}
+
+.left-side {
+	display: flex;
+	align-items: center;
+}
+
+@media screen and (max-width: 575px) {
+	.filter {
+		display: block;
+		margin-top: 20px;
+	}
+
+	.filter-width {
+		width: 100%;
+	}
+
+	.left-side {
+		justify-content: space-between;
+	}
+}

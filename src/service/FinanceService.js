@@ -4,7 +4,15 @@ export default class FinanceService {
     getTransactionList(params) {
         let query = []
         Object.keys(params).forEach(each => {
-            if(params[each] != null) query.push(`${each}=${params[each]}`)
+            if(params[each] != null) {
+                if(typeof params[each] != 'object') query.push(`${each}=${params[each]}`)
+                else if(Array.isArray(params[each])) query.push(`${each}=${params[each]}`)
+                else {
+                    Object.keys(params[each]).forEach(el => {
+                        query.push(`${each}[${el}]=${params[each][el]}`)
+                    })
+                }
+            }
         })
         return axios.get(`${process.env.VUE_APP_BASE_URL}/finance/transaction?${query.join('&')}`)
     }

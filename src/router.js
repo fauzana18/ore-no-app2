@@ -15,7 +15,7 @@ const routes = [
             {
                 path: '/finance',
                 name: 'finance',
-                component: () => import('./pages/finance.vue')
+                component: () => import('./pages/finance/view.vue')
             },
             {
                 path: '/setting',
