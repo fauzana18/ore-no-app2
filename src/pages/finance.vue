@@ -3,6 +3,11 @@
 		<div class="col-12">
 			<div class="card">
 				<Toast/>
+				<Dialog header="Import" v-model:visible="importDialog" :breakpoints="{'960px': '75vw'}" :style="{width: '30vw'}" :modal="true" :dismissableMask="true">
+					<Button style="width: 100%;" label="Download Template" icon="pi pi-download" class="mt-2 p-button-success" @click="downloadTemplate" />
+					<FileUpload style="width: 100%;" mode="basic" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" :disabled="submitting"
+						:maxFileSize="1000000" label="Import" chooseLabel="Import" class="mt-2" :customUpload="true" @uploader="fileHandler" />
+				</Dialog>
 				<Toolbar class="mb-4">
 					<template v-slot:start>
 						<div class="my-2">
@@ -12,8 +17,7 @@
 					</template>
 
 					<template v-slot:end>
-						<FileUpload mode="basic" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" :disabled="submitting"
-						:maxFileSize="1000000" label="Import" chooseLabel="Import" class="mr-2 inline-block" :customUpload="true" @uploader="fileHandler" />
+						<Button label="Import" icon="pi pi-plus" class="mr-2 inline-block" @click="openDialog" />
 						<Button label="Export" icon="pi pi-upload" class="p-button-help mr-2" @click="exportCSV($event)"  />
 					</template>
 				</Toolbar>
@@ -115,7 +119,7 @@
 				<Dialog v-model:visible="deleteTransactionDialog" :style="{width: '450px'}" header="Konfirmasi" :modal="true">
 					<div class="flex align-items-center justify-content-center">
 						<i class="pi pi-exclamation-triangle mr-3" style="font-size: 2rem" />
-						<span v-if="product">Apakah anda yakin ingin menghapus <b>{{toDelete.name}}</b>?</span>
+						<span>Apakah anda yakin ingin menghapus <b>{{toDelete.name}}</b>?</span>
 					</div>
 					<template #footer>
 						<Button label="Tidak" icon="pi pi-times" class="p-button-text" @click="deleteTransactionDialog = false"/>
@@ -126,7 +130,7 @@
 				<Dialog v-model:visible="deleteTransactionsDialog" :style="{width: '450px'}" header="Konfirmasi" :modal="true">
 					<div class="flex align-items-center justify-content-center">
 						<i class="pi pi-exclamation-triangle mr-3" style="font-size: 2rem" />
-						<span v-if="product">Apakah anda yakin ingin menghapus transaksi yang dipilih?</span>
+						<span>Apakah anda yakin ingin menghapus transaksi yang dipilih?</span>
 					</div>
 					<template #footer>
 						<Button label="Tidak" icon="pi pi-times" class="p-button-text" @click="deleteTransactionsDialog = false"/>
@@ -170,7 +174,8 @@ export default {
 			range: [
 				{ label: 'Semua' }
 			],
-			rerender: 0
+			rerender: 0,
+			importDialog: false
 		}
 	},
     FinanceService: null,
@@ -384,21 +389,36 @@ export default {
 		async fileHandler(e) {
 			let hasil = await this.getDataExcel(e.files[0])
 			let ready = []
-			hasil.forEach((each, i) => {
-				if(each.created) {
-					const findCategory = this.category.list.find(el => el.name == each.category)
-					let obj = {
-						name: each.name,
-						category_id: findCategory.id,
-						created: new Date(each.created),
-						amount: each.out ? each.out : each.in,
-						profile_id: this.profiles.list[this.profiles.selected].id
+			try {
+				hasil.forEach((each, i) => {
+					if(each.Tanggal) {
+						const findCategory = this.category.list.find(el => el.name == each.Kategori)
+						const splitDate = typeof each.Tanggal == 'string' ? each.Tanggal.split('-') : undefined
+
+						if(!findCategory) throw { message: 'Kategori tidak sesuai dengan pilihan yang tersedia.' }
+						if(isNaN(each.Jumlah)) throw { message: 'Jumlah harus berupa angka.' }
+						if(splitDate == undefined) throw { message: 'Tanggal tidak sesuai format.' }
+						else if (splitDate.length < 3) throw { message: 'Tanggal tidak sesuai format.' }
+						else {
+							if (parseInt(splitDate[0]) > 31) throw { message: 'Tanggal tidak sesuai format.' }
+							if (parseInt(splitDate[1]) > 12) throw { message: 'Tanggal tidak sesuai format.' }
+							if (splitDate[2].length != 4) throw { message: 'Tanggal tidak sesuai format.' }
+						}
+
+						let obj = {
+							name: each.Judul,
+							category_id: findCategory.id,
+							created: new Date(splitDate[2], parseInt(splitDate[1]) - 1, splitDate[0]),
+							amount: each.Jumlah,
+							profile_id: this.profiles.list[this.profiles.selected].id
+						}
+						ready.push(obj)
 					}
-					obj.amount = parseInt(obj.amount.split(',')[0].substr(2).replace(".", ""))
-					ready.push(obj)
-				}
-			})
-			await this.importTransaction(ready)
+				})
+				await this.importTransaction(ready)
+			} catch (err) {
+				this.$toast.add({severity: 'error', summary: 'Gagal', detail: err.message || 'Data tidak sesuai format.', life: 3000})
+			}
 		},
 		getDataExcel(file) {
             return new Promise(resolve=>{
@@ -505,16 +525,56 @@ export default {
             }
 		},
 		scrollTop() {
-			window.scrollTo(0, 0)
-			// let scrollToTop = window.setInterval(() => {
-			// 	let pos = window.scrollTop
-			// 	if (pos > 0) {
-			// 		window.scrollTo(0, pos - 100)
-			// 	} else {
-			// 		window.clearInterval(scrollToTop)
-			// 	}
-			// }, 16)
-		}
+			let scrollToTop = window.setInterval(() => {
+				let pos = window.scrollY
+				if (pos > 0) {
+					window.scrollTo(0, pos - 500)
+				} else {
+					window.clearInterval(scrollToTop)
+				}
+			}, 16)
+		},
+		openDialog() {
+			this.importDialog = true
+		},
+		downloadTemplate() {
+            let wb = {}
+            wb.Sheets = {}
+            wb.SheetNames = []
+
+            let wopts = { bookType: 'xlsx', bookSST: false, type: 'binary' }
+            let ws = { '!ref': "A1:Z220" }
+			let wscols = [
+				{wch: 5},
+				{wch: 15},
+				{wch: 50},
+				{wch: 15},
+				{wch: 30},
+			]
+            ws['A1'] = { v: "No", t: "s" }
+            ws['B1'] = { v: "Tanggal", t: "s" }
+            ws['C1'] = { v: "Judul", t: "s" }
+            ws['D1'] = { v: "Jumlah", t: "s" }
+            ws['E1'] = { v: "Kategori", t: "s" }
+            ws['J1'] = { v: "Catatan", t: "s" }
+
+            ws['A2'] = { v: "1", t: "n" }
+            ws['B2'] = { v: "18-07-1997", w: "18-07-1997", t: "s" }
+            ws['C2'] = { v: "Nasi Uduk", t: "s" }
+            ws['D2'] = { v: "10000", t: "n" }
+            ws['E2'] = { v: "Makanan dan Minuman", t: "s" }
+            ws['J2'] = { v: "Kategori harus sesuai dengan pilihan yang tersedia", t: "s" }
+            ws['J3'] = { v: "Pastikan kolom tanggal memiliki format text", t: "s" }
+            ws['J4'] = { v: "Maksimum 500 baris untuk satu kali import", t: "s" }
+
+			ws['!cols'] = wscols
+            
+            wb.SheetNames.push('Sheets')
+            wb.Sheets['Sheets'] = ws
+
+            XLSX.write(wb, wopts)
+            XLSX.writeFile(wb, 'Template Import.xlsx')
+        }
 	}
 }
 </script>

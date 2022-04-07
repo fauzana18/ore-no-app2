@@ -7,7 +7,7 @@ import './assets/demo/flags/flags.css'
 
 import { createApp, reactive } from 'vue'
 import { createPinia } from 'pinia'
-import Vue2TouchEvents from 'vue2-touch-events'
+import Vue3TouchEvents from "vue3-touch-events"
 import router from './router'
 import AppWrapper from './AppWrapper.vue'
 import PrimeVue from 'primevue/config'
@@ -114,7 +114,9 @@ app.use(ConfirmationService)
 app.use(ToastService)
 app.use(router)
 app.use(pinia)
-app.use(Vue2TouchEvents)
+app.use(Vue3TouchEvents, {
+	disableClick: true
+})
 
 app.directive('tooltip', Tooltip)
 app.directive('ripple', Ripple)

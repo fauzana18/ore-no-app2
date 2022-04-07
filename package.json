@@ -18,7 +18,7 @@
     "prismjs": "^1.27.0",
     "vue": "3.2.9",
     "vue-router": "^4.0.0-0",
-    "vue2-touch-events": "^3.2.2",
+    "vue3-touch-events": "^4.1.0",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {

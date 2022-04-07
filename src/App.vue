@@ -2,10 +2,10 @@
 	<div :class="containerClass" @click="onWrapperClick">
         <AppTopBar @menu-toggle="onMenuToggle" />
         <div class="layout-sidebar" @click="onSidebarClick">
-            <AppMenu :model="menu" @menuitem-click="onMenuItemClick" />
+            <AppMenu :model="menu" @menuitem-click="onMenuItemClick" v-touch:swipe.left="closeMenu" />
         </div>
 
-        <div class="layout-main-container" v-touch:swipe.right="onMenuToggle">
+        <div class="layout-main-container" v-touch:swipe.right="openMenu">
             <div class="layout-main">
                 <router-view />
             </div>
@@ -174,18 +174,18 @@ export default {
             if (this.isDesktop()) {
                 if (this.layoutMode === 'overlay') {
 					if(this.mobileMenuActive === true) {
-						this.overlayMenuActive = true;
+						this.overlayMenuActive = true
 					}
 
-                    this.overlayMenuActive = !this.overlayMenuActive;
+                    this.overlayMenuActive = !this.overlayMenuActive
 					this.mobileMenuActive = false;
                 }
                 else if (this.layoutMode === 'static') {
-                    this.staticMenuInactive = !this.staticMenuInactive;
+                    this.staticMenuInactive = !this.staticMenuInactive
                 }
             }
             else {
-                this.mobileMenuActive = !this.mobileMenuActive;
+                this.mobileMenuActive = !this.mobileMenuActive
             }
 
             event.preventDefault();
@@ -230,6 +230,12 @@ export default {
         applyScale() {
             document.documentElement.style.fontSize = this.scale + 'px'
         },
+        openMenu() {
+            this.mobileMenuActive = true
+        },
+        closeMenu() {
+            this.mobileMenuActive = false
+        }
     },
     beforeUnmount() {
         EventBus.off('theme-change', this.themeChangeListener)
