@@ -12,7 +12,7 @@
             <AppFooter />
         </div>
 
-		<AppConfig :layoutMode="layoutMode" @layout-change="onLayoutChange" />
+		<!-- <AppConfig :layoutMode="layoutMode" @layout-change="onLayoutChange" /> -->
         <transition name="layout-mask">
             <div class="layout-mask p-component-overlay" v-if="mobileMenuActive"></div>
         </transition>
@@ -22,8 +22,9 @@
 <script>
 import AppTopBar from './AppTopbar.vue';
 import AppMenu from './AppMenu.vue';
-import AppConfig from './AppConfig.vue';
+// import AppConfig from './AppConfig.vue';
 import AppFooter from './AppFooter.vue';
+import EventBus from './AppEventBus'
 import { profileStore, categoryStore } from './store/finance.js'
 
 export default {
@@ -34,12 +35,18 @@ export default {
             staticMenuInactive: false,
             overlayMenuActive: false,
             mobileMenuActive: false,
+            scale: localStorage.getItem('scale') || 14,
             menu : [
+                {
+                    label: 'Finance',
+                    items: [
+                        {label: 'Catatan Keuangan', icon: 'pi pi-fw pi-money-bill', to: '/finance'},
+                    ]
+                },
                 {
                     label: 'Home',
                     items: [
-                        {label: 'Dashboard', icon: 'pi pi-fw pi-home', to: '/'},
-                        {label: 'Catatan Keuangan', icon: 'pi pi-fw pi-money-bill', to: '/finance'},
+                        {label: 'Dashboard', icon: 'pi pi-fw pi-home', to: '/'}
                     ]
                 },
 				{
@@ -145,6 +152,7 @@ export default {
             ]
         }
     },
+    themeChangeListener: null,
     watch: {
         $route() {
             this.menuActive = false;
@@ -218,9 +226,25 @@ export default {
             }
 
             return true;
-        }
+        },
+        applyScale() {
+            document.documentElement.style.fontSize = this.scale + 'px'
+        },
+    },
+    beforeUnmount() {
+        EventBus.off('theme-change', this.themeChangeListener)
     },
     async mounted() {
+        this.themeChangeListener = () => {
+            this.applyScale()
+        }
+
+        EventBus.on('theme-change', this.themeChangeListener)
+        EventBus.emit('theme-change', {
+            theme: localStorage.getItem('theme') || 'bootstrap4-light-blue',
+            dark: localStorage.getItem('dark') || false
+        })
+
         const profiles = profileStore()
         const category = categoryStore()
 		await profiles.getList()
@@ -251,7 +275,7 @@ export default {
     components: {
         'AppTopBar': AppTopBar,
         'AppMenu': AppMenu,
-        'AppConfig': AppConfig,
+        // 'AppConfig': AppConfig,
         'AppFooter': AppFooter,
     }
 }

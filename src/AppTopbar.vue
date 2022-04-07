@@ -15,13 +15,7 @@
 		</button>
 		<ul class="layout-topbar-menu hidden lg:flex origin-top">
 			<li>
-				<button class="p-link layout-topbar-button">
-					<i class="pi pi-calendar"></i>
-					<span>Events</span>
-				</button>
-			</li>
-			<li>
-				<button class="p-link layout-topbar-button">
+				<button class="p-link layout-topbar-button" @click="goto('setting')">
 					<i class="pi pi-cog"></i>
 					<span>Settings</span>
 				</button>
@@ -73,6 +67,11 @@ export default {
 		selectProfile(i) {
 			this.profiles.select(i)
 			this.$refs.op.hide()
+		},
+		goto(page) {
+			const ul = document.getElementsByTagName('ul')[0]
+			ul.className += ' hidden'
+			this.$router.push({name: page})
 		}
     },
 	computed: {

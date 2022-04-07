@@ -15,21 +15,25 @@
 						<FileUpload mode="basic" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" :disabled="submitting"
 						:maxFileSize="1000000" label="Import" chooseLabel="Import" class="mr-2 inline-block" :customUpload="true" @uploader="fileHandler" />
 						<Button label="Export" icon="pi pi-upload" class="p-button-help mr-2" @click="exportCSV($event)"  />
-						<Button icon="pi pi-refresh" class="p-button-rounded p-button-info" @click="getList()"/>
 					</template>
 				</Toolbar>
 
 				<DataTable ref="dt" :value="transactions" :lazy="true" v-model:selection="selectedTransactions" dataKey="id" :paginator="true" :rows="10" :loading="loading" @sort="onSort($event)"
-							paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown" :rowsPerPageOptions="[5,10,25]"
-							currentPageReportTemplate="Showing {first} to {last} of {totalRecords} transactions" responsiveLayout="stack" :totalRecords="totalRecords" @page="onPage($event)">
+							paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown" :rowsPerPageOptions="[5,10,25]" :pageLinkSize="3"
+							currentPageReportTemplate="Showing {first} to {last} of {totalRecords} transactions" responsiveLayout="stack" :totalRecords="totalRecords" @page="onPage($event)" :key="rerender">
 					<template #header>
 						<div class="flex flex-column md:flex-row md:justify-content-between md:align-items-center">
-							<h5 class="m-0">Catatan Keuangan</h5>
-							<div style="display: flex;">
-								<Dropdown v-model="filters.category_id" :options="category.list" optionLabel="name" placeholder="Kategori" class="mr-2" />
+							<div class="left-side">
+								<h5 class="m-0">Catatan Keuangan</h5>
+								<Button icon="pi pi-refresh" class="p-button-rounded p-button-info ml-2" @click="reload"/>
+							</div>
+							<div class="filter">
+								<Dropdown v-model="filters.c_type" :options="category.type" optionLabel="name" placeholder="Tipe" class="mr-2 filter-width" />
+								<Dropdown v-if="filters.c_type" v-model="filters.category_id" :options="categoryOptionsFilter" optionLabel="name" placeholder="Kategori" class="mr-2 mt-2 md:mt-0 filter-width" />
+								<Dropdown v-model="filters.created" :options="range" optionLabel="label" placeholder="Tanggal" class="mr-2 mt-2 md:mt-0 filter-width" />
 								<span class="block mt-2 md:mt-0 p-input-icon-left">
 									<i class="pi pi-search" />
-									<InputText v-model="filters.name" placeholder="Pencarian..." />
+									<InputText v-model="filters.name" placeholder="Pencarian..." class="filter-width"/>
 								</span>
 							</div>
 						</div>
@@ -158,10 +162,15 @@ export default {
 			profiles: profileStore(),
 			category: categoryStore(),
 			categoryOptions: [],
+			categoryOptionsFilter: [],
 			modalHeader: 'Tambah Transaksi',
 			submitStatus: '',
 			submitMessage: '',
-			toDelete: {}
+			toDelete: {},
+			range: [
+				{ label: 'Semua' }
+			],
+			rerender: 0
 		}
 	},
     FinanceService: null,
@@ -202,6 +211,13 @@ export default {
 			handler() {
 				this.categoryOptions = this.category.list.filter(each => each.type == this.transaction.type.name)
 				this.transaction.category = this.categoryOptions[0]
+			}
+		},
+		'filters.c_type': {
+			handler() {
+				if(this.filters.c_type) {
+					this.categoryOptionsFilter = this.category.list.filter(each => each.type == this.filters.c_type.name)
+				}
 			}
 		}
 	},
@@ -439,6 +455,17 @@ export default {
 				await this.getList()
 			}
 		},
+		async reload() {
+			this.initFilters()
+			this.lazyParams = {
+				offset: 0,
+				limit: this.$refs.dt.rows,
+				order: null,
+				profile_id: this.profiles.list[this.profiles.selected] ? this.profiles.list[this.profiles.selected].id : 1
+			}
+			this.rerender++
+			await this.getList()
+		},
 		async onPage(e) {
 			this.lazyParams = {
 				offset: e.first,
@@ -447,6 +474,7 @@ export default {
 				profile_id: this.profiles.list[this.profiles.selected] ? this.profiles.list[this.profiles.selected].id : 1
 			}
 			await this.getList()
+			this.scrollTop()
 		},
 		async onSort(e) {
 			this.lazyParams = {
@@ -470,15 +498,51 @@ export default {
 		initFilters() {
 			this.filters = {
                 name: '',
-                created: null,
+                created: this.range[0],
+				c_type: null,
                 category_id: null,
                 amount: 0,
             }
 		},
+		scrollTop() {
+			window.scrollTo(0, 0)
+			// let scrollToTop = window.setInterval(() => {
+			// 	let pos = window.scrollTop
+			// 	if (pos > 0) {
+			// 		window.scrollTo(0, pos - 100)
+			// 	} else {
+			// 		window.clearInterval(scrollToTop)
+			// 	}
+			// }, 16)
+		}
 	}
 }
 </script>
 
 <style scoped lang="scss">
 @import '../assets/demo/badges.scss';
+
+.filter {
+	display: flex;
+}
+
+.left-side {
+	display: flex;
+	align-items: center;
+}
+
+@media screen and (max-width: 575px) {
+	.filter {
+		display: block;
+		margin-top: 20px;
+	}
+
+	.filter-width {
+		width: 100%;
+	}
+
+	.left-side {
+		justify-content: space-between;
+	}
+}
 </style>

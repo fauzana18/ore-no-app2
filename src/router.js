@@ -18,6 +18,11 @@ const routes = [
                 component: () => import('./pages/finance.vue')
             },
             {
+                path: '/setting',
+                name: 'setting',
+                component: () => import('./pages/setting.vue')
+            },
+            {
                 path: '/formlayout',
                 name: 'formlayout',
                 component: () => import('./components/FormLayoutDemo.vue')
