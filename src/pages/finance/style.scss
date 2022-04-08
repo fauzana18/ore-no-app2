@@ -9,6 +9,26 @@
 	align-items: center;
 }
 
+.table-footer {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-end;
+	width: 100%;
+
+	div {
+		width: 10%;
+	}
+}
+
+.table-footer-content {
+	display: flex;
+	flex-direction: column;
+}
+
+.input-cat {
+	width: 70%
+}
+
 @media screen and (max-width: 575px) {
 	.filter {
 		display: block;
@@ -21,5 +41,22 @@
 
 	.left-side {
 		justify-content: space-between;
+	}
+
+	.table-footer, .table-footer-content {
+		display: flex;
+		flex-direction: row;
+		justify-content: space-between;
+		width: 100%;
+
+		div {
+			width: 50%;
+			display: flex;
+			justify-content: center;
+		}
+	}
+
+	.input-cat {
+		width: 65%
 	}
 }

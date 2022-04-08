@@ -26,7 +26,6 @@ export default {
 			submitMessage: '',
 			toDelete: {},
 			range: [
-				{ label: 'Semua', code: 1 },
 				{ label: '7 Hari Terakhir', code: 2 },
 				{ label: '30 Hari Terakhir', code: 3 },
 				{ label: 'Bulan Ini', code: 4 },
@@ -37,7 +36,19 @@ export default {
 			importDialog: false,
 			dateDialog: false,
 			dateStart: null,
-			dateEnd: null
+			dateEnd: null,
+			modes: [
+				{name: 'Per Hari', icon: 'pi-calendar', code: 1},
+				{name: 'Per Transaksi', icon: 'pi-list', code: 2}
+			],
+			selectedMode: null,
+			expandedRowGroups: null,
+			categoryDialog: false,
+			cat: {},
+			editCategoryField: [],
+			newCategoryField: false,
+			submittingCategory: false,
+			deletingCategory: false
 		}
 	},
     FinanceService: null,
@@ -46,25 +57,20 @@ export default {
 		this.initFilters()
 	},
 	async mounted() {
+		let cleansedQuery = this.cleansingQuery(this.filters)
 		this.lazyParams = {
-            offset: 0,
-            limit: this.$refs.dt.rows,
-            order: null,
+			...cleansedQuery,
+            order: ['created', 'DESC'],
 			profile_id: this.profiles.list[this.profiles.selected] ? this.profiles.list[this.profiles.selected].id : 1
         }
+		this.selectedMode = this.modes[0]
         await this.getList()
 		this.transaction.created = new Date()
 	},
 	watch: {
 		'profiles.selected': {
 			async handler() {
-				this.lazyParams = {
-					offset: 0,
-					limit: this.$refs.dt.rows,
-					order: null,
-					profile_id: this.profiles.list[this.profiles.selected].id || 1
-				}
-				await this.getList()
+				await this.reload()
 			}
 		},
 		'category.list': {
@@ -86,9 +92,28 @@ export default {
 					this.categoryOptionsFilter = this.category.list.filter(each => each.type == this.filters.c_type.name)
 				}
 			}
+		},
+		'cat.type': {
+			handler() {
+				this.categoryOptions = this.category.list.filter(each => each.type == this.cat.type.name)
+				this.editCategoryField = []
+				this.newCategoryField = false
+			}
 		}
 	},
 	methods: {
+		async changeView(e) {
+			switch (e.value.code) {
+				case 1:
+					this.range.splice(0, 1)
+					break
+				case 2:
+					this.range.unshift({ label: 'Semua', code: 1 })
+					break
+			}
+			this.filters.created = this.range[0]
+			await this.reload()
+		},
         initFilters() {
 			this.filters = {
                 name: '',
@@ -99,15 +124,16 @@ export default {
             }
 		},
 		formatCurrency(value) {
-			if(value)
-				return value.toLocaleString('id-ID', {style: 'currency', currency: 'IDR'})
-			return
+			return value.toLocaleString('id-ID', {style: 'currency', currency: 'IDR'})
 		},
         dateHandler(date) {
 			const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }
 			const d = new Date(date)
+			const dateNow = new Date()
 			const dateString = d.toLocaleDateString('id-ID', options)
-			return dateString
+			const dateNowString = dateNow.toLocaleDateString('id-ID', options)
+			const res = dateNowString == dateString ? `Hari ini, ${dateString.split(', ')[1]}` : dateString
+			return res
 		},
 		scrollTop() {
 			let scrollToTop = window.setInterval(() => {
@@ -122,11 +148,28 @@ export default {
         openDialog() {
 			this.importDialog = true
 		},
+		calculateAmount(created, type) {
+            let total = 0
+
+            for (let transaction of this.transactions) {
+				if (transaction.created == created) {
+					if(transaction.category.type == type) total += transaction.amount
+				}
+			}
+			total = this.formatCurrency(total)
+
+            return total
+        },
         async getList() {
 			this.loading = true
             const list = await this.FinanceService.getTransactionList(this.lazyParams)
             this.transactions = list.data.result
 			this.totalRecords = list.data.total
+			this.transactions.forEach(each => {
+				const date =  new Date(each.created)
+				date.setHours(0, 0, 0, 0)
+				each.created = date.toLocaleDateString()
+			})
 			this.loading = false
         },
 		openNew() {
@@ -143,6 +186,9 @@ export default {
 		hideDialog() {
 			this.transactionDialog = false
 			this.submitted = false
+		},
+		onRowGroupExpand(e) {
+			this.expandedRowGroups = [e.data]
 		},
 		async saveTransaction() {
 			let res
@@ -276,11 +322,13 @@ export default {
 			this.dateStart = null
 			this.dateEnd = null
 			this.initFilters()
+			let cleansedQuery = this.cleansingQuery(this.filters)
 			this.lazyParams = {
-				offset: 0,
-				limit: this.$refs.dt.rows,
-				order: null,
-				profile_id: this.profiles.list[this.profiles.selected] ? this.profiles.list[this.profiles.selected].id : 1
+				offset: this.selectedMode.code == 2 ? 0 : null,
+				limit: this.selectedMode.code == 2 ? 10 : null,
+				order: ['created', 'DESC'],
+				profile_id: this.profiles.list[this.profiles.selected] ? this.profiles.list[this.profiles.selected].id : 1,
+				...cleansedQuery
 			}
 			this.rerender++
 			await this.getList()
@@ -288,9 +336,9 @@ export default {
 		async onPage(e) {
 			let cleansedQuery = this.cleansingQuery(this.filters)
 			this.lazyParams = {
-				offset: e.first,
-				limit: this.$refs.dt.rows,
-				order: e.sortField ? [e.sortField, e.sortOrder == 1 ? 'ASC' : 'DESC'] : ['created', 'DESC'],
+				offset: this.selectedMode.code == 2 ? e.first : null,
+				limit: this.selectedMode.code == 2 ? e.rows : null,
+				order: this.selectedMode.code == 2 ? e.sortField ? [e.sortField, e.sortOrder == 1 ? 'ASC' : 'DESC'] : ['created', 'DESC'] : ['created', 'DESC'],
 				profile_id: this.profiles.list[this.profiles.selected] ? this.profiles.list[this.profiles.selected].id : 1,
 				...cleansedQuery
 			}
@@ -300,9 +348,9 @@ export default {
 		async onSort(e) {
 			let cleansedQuery = this.cleansingQuery(this.filters)
 			this.lazyParams = {
-				offset: e.first,
-				limit: this.$refs.dt.rows,
-				order: [e.sortField, e.sortOrder == 1 ? 'ASC' : 'DESC'],
+				offset: this.selectedMode.code == 2 ? e.first : null,
+				limit: this.selectedMode.code == 2 ? e.rows : null,
+				order: this.selectedMode.code == 2 ? [e.sortField, e.sortOrder == 1 ? 'ASC' : 'DESC'] : ['created', 'DESC'],
 				profile_id: this.profiles.list[this.profiles.selected] ? this.profiles.list[this.profiles.selected].id : 1,
 				...cleansedQuery
 			}
@@ -504,6 +552,111 @@ export default {
         },
         exportCSV() {
 			this.$refs.dt.exportCSV()
-		}
+		},
+		manageCategory() {
+			this.cat.type = this.category.type[0]
+			this.categoryDialog = true
+		},
+		toggleAddCategory() {
+			this.submitted = false
+			this.newCategoryField = !this.newCategoryField
+			this.cat.name = ''
+			this.cat.id = null
+			this.editCategoryField.forEach((each, i) => { this.editCategoryField[i] = false })
+		},
+		toggleEditCategory(i) {
+			this.submitted = false
+			this.newCategoryField = false
+			this.editCategoryField[i] = !this.editCategoryField[i]
+			this.editCategoryField.forEach((each, index) => { if(i != index) this.editCategoryField[index] = false })
+			this.cat.name = this.categoryOptions[i].name
+			this.cat.id = this.categoryOptions[i].id
+		},
+		async saveCategory(i) {
+			let res, stat, message, summary
+			this.submitted = true
+			this.submittingCategory = true
+
+			if(!this.cat.name) {
+				this.submittingCategory = false
+				return
+			}
+
+			const body = {
+				name: this.cat.name,
+				type: this.cat.type.name
+			}
+			
+			try {
+				if(!this.cat.id) res = await this.FinanceService.createCategory(body)
+				else res = await this.FinanceService.updateCategory(body, this.cat.id)
+
+				if(res.status == 200) {
+					stat = 'success'
+					message = res.data.message
+					summary = 'Sukses'
+					if(i) this.category.changeData({...body, id: this.cat.id})
+					else this.category.pushData(res.data.result)
+					this.categoryOptions = this.category.list.filter(each => each.type == this.cat.type.name)
+				}
+				else {
+					stat = 'error'
+					message = res.data.message
+					summary = 'Gagal'
+				}
+			}
+			catch(err) {
+				stat = 'error'
+				message = err.response ? err.response.data.message : 'Data gagal disimpan.'
+				summary = 'Gagal'
+			}
+			if(i) this.editCategoryField[i] = false
+			else this.newCategoryField = false
+			this.rerender++
+			this.$toast.add({severity: stat, summary, detail: message, life: 3000})
+			this.submittingCategory = false
+		},
+		confirmDeleteCategory(e, i) {
+			this.$confirm.require({
+                target: e.currentTarget,
+                message: `Apakah anda yakin ingin menghapus ${this.categoryOptions[i].name}? \nData transaksi dengan kategori ini juga akan ikut terhapus.`,
+                icon: 'pi pi-exclamation-triangle',
+                accept: async () => {
+					await this.deleteCategory(this.categoryOptions[i])
+                },
+                reject: () => {
+                    this.$confirm.close()
+                }
+            })
+		},
+		async deleteCategory(data) {
+			let stat, message, summary
+			this.deletingCategory = true
+			
+			try {
+				const res = await this.FinanceService.deleteCategory(data.id)
+
+				if(res.status == 200) {
+					stat = 'success'
+					message = res.data.message
+					summary = 'Sukses'
+					this.category.spliceData(data)
+					this.categoryOptions = this.category.list.filter(each => each.type == this.cat.type.name)
+				}
+				else {
+					stat = 'error'
+					message = res.data.message
+					summary = 'Gagal'
+				}
+			}
+			catch(err) {
+				stat = 'error'
+				message = err.response ? err.response.data.message : 'Data gagal dihapus.'
+				summary = 'Gagal'
+			}
+			this.rerender++
+			this.$toast.add({severity: stat, summary, detail: message, life: 3000})
+			this.deletingCategory = false
+		},
 	}
 }

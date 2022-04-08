@@ -40,4 +40,16 @@ export default class FinanceService {
     getCategoryList() {
         return axios.get(`${process.env.VUE_APP_BASE_URL}/finance/category`)
     }
+
+    createCategory(body) {
+        return axios.post(`${process.env.VUE_APP_BASE_URL}/finance/category`, body)
+    }
+
+    updateCategory(body, id) {
+        return axios.patch(`${process.env.VUE_APP_BASE_URL}/finance/category/${id}`, body)
+    }
+
+    deleteCategory(id) {
+        return axios.delete(`${process.env.VUE_APP_BASE_URL}/finance/category/${id}`)
+    }
 }

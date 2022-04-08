@@ -40,5 +40,43 @@ export const categoryStore= defineStore('category', {
                 this.type[i] = { name: each, code: i}
             })
         },
+        pushData(data) {
+            this.list.push(data)
+            this.list.sort(( a, b ) => {
+                if ( a.name < b.name ){
+                  return -1
+                }
+                if ( a.name > b.name ){
+                  return 1
+                }
+                return 0
+            })
+        },
+        changeData(data) {
+            const i = this.list.findIndex(each => each.id == data.id)
+            this.list[i] = data
+            this.list.sort(( a, b ) => {
+                if ( a.name < b.name ){
+                  return -1
+                }
+                if ( a.name > b.name ){
+                  return 1
+                }
+                return 0
+            })
+        },
+        spliceData(data) {
+            const i = this.list.findIndex(each => each.id == data.id)
+            this.list.splice(i, 1)
+            this.list.sort(( a, b ) => {
+                if ( a.name < b.name ){
+                  return -1
+                }
+                if ( a.name > b.name ){
+                  return 1
+                }
+                return 0
+            })
+        }
     },
 })
