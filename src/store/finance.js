@@ -80,3 +80,25 @@ export const categoryStore= defineStore('category', {
         }
     },
 })
+
+export const saldoStore = defineStore('saldo', {
+    state: () => {
+        return {
+            in: 0,
+            out: 0
+        }
+    },
+    actions: {
+        async getSaldo(profile) {
+            const res = await financeService.getSaldo(profile)
+            this.out = res.data.pengeluaran
+            this.in = res.data.pemasukan
+        },
+        add(type, amount) {
+            this[type] += amount
+        },
+        substract(type, amount) {
+            this[type] -= amount
+        }
+    },
+})

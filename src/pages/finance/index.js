@@ -1,5 +1,5 @@
 import FinanceService from '../../service/FinanceService'
-import { profileStore, categoryStore } from '../../store/finance.js'
+import { profileStore, categoryStore, saldoStore } from '../../store/finance.js'
 import * as XLSX from 'xlsx'
 
 export default {
@@ -19,6 +19,7 @@ export default {
 			lazyParams: {},
 			profiles: profileStore(),
 			category: categoryStore(),
+			saldo: saldoStore(),
 			categoryOptions: [],
 			categoryOptionsFilter: [],
 			modalHeader: 'Tambah Transaksi',
@@ -48,7 +49,8 @@ export default {
 			editCategoryField: [],
 			newCategoryField: false,
 			submittingCategory: false,
-			deletingCategory: false
+			deletingCategory: false,
+			amountNegative: false
 		}
 	},
     FinanceService: null,
@@ -65,6 +67,7 @@ export default {
         }
 		this.selectedMode = this.modes[0]
         await this.getList()
+		this.amountNegative = this.saldo.in - this.saldo.out < 0
 		this.transaction.created = new Date()
 	},
 	watch: {
@@ -98,6 +101,16 @@ export default {
 				this.categoryOptions = this.category.list.filter(each => each.type == this.cat.type.name)
 				this.editCategoryField = []
 				this.newCategoryField = false
+			}
+		},
+		'saldo.in': {
+			handler() {
+				this.amountNegative = this.saldo.in - this.saldo.out < 0
+			}
+		},
+		'saldo.out': {
+			handler() {
+				this.amountNegative = this.saldo.in - this.saldo.out < 0
 			}
 		}
 	},
@@ -215,6 +228,12 @@ export default {
 				if(res.status == 200) {
 					this.submitStatus = 'success'
 					this.submitMessage = res.data.message
+					if(!this.transaction.id) this.saldo.add(this.transaction.type.name == 'Pemasukan' ? 'in' : 'out', body.amount)
+					else {
+						const findTransaction = this.transactions.find(each => each.id == this.transaction.id)
+						const calculated = body.amount - findTransaction.amount
+						this.saldo.add(this.transaction.type.name == 'Pemasukan' ? 'in' : 'out', calculated)
+					}
 				}
 				else {
 					this.submitStatus = 'error'
@@ -230,9 +249,9 @@ export default {
 		},
 		editTransaction(transaction) {
 			this.submitStatus = ''
-			transaction.created = new Date(transaction.created)
-			transaction.type = this.category.type.find(each => each.name == transaction.category.type)
 			this.transaction = {...transaction}
+			this.transaction.created = new Date(transaction.created)
+			this.transaction.type = this.category.type.find(each => each.name == transaction.category.type)
 			this.modalHeader = 'Ubah Transaksi'
 			this.transactionDialog = true
 		},
@@ -251,6 +270,7 @@ export default {
 					stat = 'success'
 					message = res.data.message
 					summary = 'Sukses'
+					this.saldo.substract(this.toDelete.category.type == 'Pemasukan' ? 'in' : 'out', this.toDelete.amount)
 				}
 				else {
 					stat = 'error'
@@ -284,6 +304,7 @@ export default {
 						if(res.status == 200) {
 							responses.push('success')
 							message = res.data.message
+							this.saldo.substract(element.category.type == 'Pemasukan' ? 'in' : 'out', element.amount)
 						}
 						else {
 							responses.push('error')

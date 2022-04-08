@@ -23,9 +23,6 @@
 						<div class="my-2">
 							<Button label="Atur Kategori" class="p-button-info mr-2" @click="manageCategory" />
 						</div>
-					</template>
-
-					<template v-slot:end>
 						<SelectButton v-model="selectedMode" :options="modes" optionLabel="name" @change="changeView">
 							<template #option="slotProps">
 								<div>
@@ -34,6 +31,19 @@
 								</div>
 							</template>
 						</SelectButton>
+					</template>
+
+					<template v-slot:end>
+						<div class="my-2 mr-3 flex flex-column">
+							<span>Total Pengeluaran</span>
+							<span>Total Pemasukan</span>
+							<span>Saldo</span>
+						</div>
+						<div class="my-2 flex flex-column">
+							<span>{{formatCurrency(saldo.out)}}</span>
+							<span style="color: green;">{{formatCurrency(saldo.in)}}</span>
+							<span :style="amountNegative ? 'color: red;' : 'color: green;'">{{formatCurrency(saldo.in - saldo.out)}}</span>
+						</div>
 					</template>
 				</Toolbar>
 

@@ -52,4 +52,8 @@ export default class FinanceService {
     deleteCategory(id) {
         return axios.delete(`${process.env.VUE_APP_BASE_URL}/finance/category/${id}`)
     }
+
+    getSaldo(profile) {
+        return axios.get(`${process.env.VUE_APP_BASE_URL}/finance/saldo?profile_id=${profile}`)
+    }
 }

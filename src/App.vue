@@ -25,7 +25,7 @@ import AppMenu from './AppMenu.vue';
 // import AppConfig from './AppConfig.vue';
 import AppFooter from './AppFooter.vue';
 import EventBus from './AppEventBus'
-import { profileStore, categoryStore } from './store/finance.js'
+import { profileStore, categoryStore, saldoStore } from './store/finance.js'
 
 export default {
     emits: ['change-theme'],
@@ -253,8 +253,10 @@ export default {
 
         const profiles = profileStore()
         const category = categoryStore()
+        const saldo = saldoStore()
 		await profiles.getList()
 		await category.getList()
+		await saldo.getSaldo(profiles.list[profiles.selected].id)
 	},
     computed: {
         containerClass() {
