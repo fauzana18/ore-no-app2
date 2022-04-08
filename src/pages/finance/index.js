@@ -338,7 +338,7 @@ export default {
 			Object.keys(filters).forEach(each => {
 				switch (each) {
 					case 'name':
-						obj[each] = filters[each] ? { like: `%${filters[each]}%` } : undefined
+						obj[each] = filters[each] ? { like: `%${filters[each].toLowerCase()}%` } : undefined
 						break
 					case 'c_type':
 						obj[each] = filters[each] ? filters[each].name : undefined
