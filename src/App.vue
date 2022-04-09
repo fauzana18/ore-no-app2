@@ -38,15 +38,15 @@ export default {
             scale: localStorage.getItem('scale') || 14,
             menu : [
                 {
-                    label: 'Finance',
-                    items: [
-                        {label: 'Catatan Keuangan', icon: 'pi pi-fw pi-money-bill', to: '/finance'},
-                    ]
-                },
-                {
                     label: 'Home',
                     items: [
                         {label: 'Dashboard', icon: 'pi pi-fw pi-home', to: '/'}
+                    ]
+                },
+                {
+                    label: 'Finance',
+                    items: [
+                        {label: 'Catatan Keuangan', icon: 'pi pi-fw pi-money-bill', to: '/finance'},
                     ]
                 },
 				{

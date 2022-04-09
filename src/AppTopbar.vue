@@ -41,12 +41,13 @@
 </template>
 
 <script>
-import { profileStore } from './store/finance.js'
+import { profileStore, saldoStore } from './store/finance.js'
 
 export default {
 	data() {
 		return {
-			profiles: profileStore()
+			profiles: profileStore(),
+			saldo: saldoStore()
 		}
 	},
     methods: {
@@ -66,6 +67,7 @@ export default {
 		},
 		selectProfile(i) {
 			this.profiles.select(i)
+			this.saldo.getSaldo(this.profiles.list[i].id)
 			this.$refs.op.hide()
 		},
 		goto(page) {

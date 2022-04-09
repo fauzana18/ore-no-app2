@@ -1,0 +1,15 @@
+.text-red {
+    color: red !important;
+}
+
+.header-dashboard {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+@media screen and (max-width: 575px) {
+    .blm {
+        display: none;
+    }
+}

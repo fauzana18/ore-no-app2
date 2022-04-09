@@ -85,7 +85,9 @@ export const saldoStore = defineStore('saldo', {
     state: () => {
         return {
             in: 0,
-            out: 0
+            out: 0,
+            monthly: {},
+            categorized: {}
         }
     },
     actions: {
@@ -93,6 +95,8 @@ export const saldoStore = defineStore('saldo', {
             const res = await financeService.getSaldo(profile)
             this.out = res.data.pengeluaran
             this.in = res.data.pemasukan
+            this.monthly = res.data.monthly
+            this.categorized = res.data.categorized
         },
         add(type, amount) {
             this[type] += amount
