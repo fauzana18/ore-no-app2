@@ -37,6 +37,18 @@ export default class FinanceService {
         return axios.get(`${process.env.VUE_APP_BASE_URL}/finance/profile`)
     }
 
+    createProfile(body) {
+        return axios.post(`${process.env.VUE_APP_BASE_URL}/finance/profile`, body)
+    }
+
+    updateProfile(body, id) {
+        return axios.patch(`${process.env.VUE_APP_BASE_URL}/finance/profile/${id}`, body)
+    }
+
+    deleteProfile(id) {
+        return axios.delete(`${process.env.VUE_APP_BASE_URL}/finance/profile/${id}`)
+    }
+
     getCategoryList() {
         return axios.get(`${process.env.VUE_APP_BASE_URL}/finance/category`)
     }

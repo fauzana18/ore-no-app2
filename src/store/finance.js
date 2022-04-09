@@ -16,6 +16,15 @@ export const profileStore = defineStore('profiles', {
         },
         select(i) {
             this.selected = i
+        },
+        pusher(data) {
+            this.list.push(data)
+        },
+        changer(i, data) {
+            this.list[i].name = data
+        },
+        splicer(i) {
+            this.list.splice(i, 1)
         }
     },
 })
