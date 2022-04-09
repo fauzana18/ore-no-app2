@@ -12,8 +12,7 @@ export default {
             profiles: profileStore(),
             amountNegative: false,
             loading: false,
-            showMonth: 6,
-			tes: navigator.languages
+            showMonth: 6
 		}
 	},
 	financeService: null,
