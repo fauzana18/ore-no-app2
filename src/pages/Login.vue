@@ -43,7 +43,7 @@ export default {
         login() {
             if(this.password == process.env.VUE_APP_PIN) {
                 localStorage.setItem("pin", this.password)
-                this.$router.push({name: 'finance'})
+                this.$router.push({name: 'dashboard'})
             }
             else this.wrong = true
         },

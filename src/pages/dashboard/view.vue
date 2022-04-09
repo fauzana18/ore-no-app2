@@ -92,6 +92,7 @@
             </div>
         </div>
 	</div>
+	{{tes}}
 </template>
 
 <script src="./index.js"></script>
