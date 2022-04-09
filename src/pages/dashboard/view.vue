@@ -69,7 +69,6 @@
                     <Column header="Tanggal">
                         <template #body="slotProps">
                             {{dateHandler(slotProps.data.created)}}
-							{{slotProps.data.created}}
                         </template>
                     </Column>
                     <Column field="name" header="Judul" style="width:25%"></Column>

@@ -158,7 +158,7 @@
 						</template>
 					</Column>
 					<template #groupheader="slotProps">
-						<span class="image-text">{{dateHandler(slotProps.data.created)}}</span>
+						<span>{{dateHandler(slotProps.data.created)}}</span>
 					</template>
 					<template #groupfooter="slotProps">
 						<td colspan="4">

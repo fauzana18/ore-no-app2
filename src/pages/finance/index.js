@@ -181,7 +181,7 @@ export default {
 			this.transactions.forEach(each => {
 				const date =  new Date(each.created)
 				date.setHours(0, 0, 0, 0)
-				each.created = date.toLocaleDateString()
+				each.created = date.toJSON()
 			})
 			this.loading = false
         },
