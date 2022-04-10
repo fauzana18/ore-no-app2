@@ -50,7 +50,18 @@ export default {
 			newCategoryField: false,
 			submittingCategory: false,
 			deletingCategory: false,
-			amountNegative: false
+			amountNegative: false,
+			header2: '',
+			range2: [
+				{ label: 'Semua', code: 1 },
+				{ label: '7 Hari Terakhir', code: 2 },
+				{ label: '30 Hari Terakhir', code: 3 },
+				{ label: 'Bulan Ini', code: 4 },
+				{ label: 'Bulan Lalu', code: 5 },
+				{ label: 'Atur Sendiri', code: 6 },
+			],
+			exportRange: {},
+			exporting: false
 		}
 	},
     FinanceService: null,
@@ -158,7 +169,11 @@ export default {
 				}
 			}, 16)
 		},
-        openDialog() {
+        openDialog(title) {
+			this.dateStart = null
+			this.dateEnd = null
+			this.header2 = title
+			this.exportRange = this.range2[0]
 			this.importDialog = true
 		},
 		calculateAmount(created, type) {
@@ -379,6 +394,8 @@ export default {
 		},
 		async onFilter(e) {
 			if(this.filters.created.code == 6) {
+				this.dateStart = null
+				this.dateEnd = null
 				this.dateDialog = true
 				return
 			}
@@ -393,6 +410,7 @@ export default {
 		},
         async searchDate() {
 			this.dateDialog = false
+			if(!this.dateStart && !this.dateEnd) return
 			let cleansedQuery = this.cleansingQuery(this.filters)
 
 			this.lazyParams = {
@@ -401,9 +419,13 @@ export default {
 			}
 			await this.getList()
 		},
+		reselect() {
+			if(!this.dateStart && !this.dateEnd) this.filters.created = this.range[0]
+		},
 		cleansingQuery(filters) {
 			let obj = {}
 			const date = new Date(), y = date.getFullYear(), m = date.getMonth()
+			let ny, nm
 			Object.keys(filters).forEach(each => {
 				switch (each) {
 					case 'name':
@@ -431,10 +453,14 @@ export default {
 								obj[each] = { gte: date }
 								break
 							case 4:
-								obj[each] = { gte: new Date(y, m, 0), lte: new Date(y, m + 1, 0) }
+								nm = m + 1 == 12 ? 0 : m + 1
+								ny = m + 1 == 12 ? y + 1 : y
+								obj[each] = { gte: new Date(y, m, 0), lte: new Date(ny, nm, 0) }
 								break
 							case 5:
-								obj[each] = { gte: new Date(y, m - 1, 0), lte: new Date(y, m, 0) }
+								nm = m - 1 < 0 ? 12 : m - 1
+								ny = m - 1 < 0 ? y - 1 : y
+								obj[each] = { gte: new Date(ny, nm, 0), lte: new Date(y, m, 0) }
 								break
 							case 6:
                                 const start = new Date(this.dateStart)
@@ -571,8 +597,147 @@ export default {
             XLSX.write(wb, wopts)
             XLSX.writeFile(wb, 'Template Import.xlsx')
         },
-        exportCSV() {
-			this.$refs.dt.exportCSV()
+        async exportExcel() {
+			const date = new Date(), y = date.getFullYear(), m = date.getMonth()
+			let ny, nm, nd, fileName, saldo = { pengeluaran: 0, pemasukan: 0, categorized: {} }
+			let query = { created: null, profile_id: this.profiles.list[this.profiles.selected].id }
+			this.exporting = true
+
+			switch (this.exportRange.code) {
+				case 1:
+					query.created = undefined
+					fileName = 'Laporan Transaksi'
+					break
+				case 2:
+					date.setDate(date.getDate() - 7)
+					date.setHours(0, 0, 0, 0)
+					query.created = { gte: date }
+					nd = new Date(date)
+					nd.setDate(nd.getDate() + 1)
+					fileName = `Laporan ${this.dateHandler(nd).split(', ')[1]} - ${this.dateHandler(new Date()).split(', ')[1]}`
+					break
+				case 3:
+					date.setDate(date.getDate() - 30)
+					date.setHours(0, 0, 0, 0)
+					query.created = { gte: date }
+					nd = new Date(date)
+					nd.setDate(nd.getDate() + 1)
+					fileName = `Laporan ${this.dateHandler(nd).split(', ')[1]} - ${this.dateHandler(new Date()).split(', ')[1]}`
+					break
+				case 4:
+					nm = m + 1 == 12 ? 0 : m + 1
+					ny = m + 1 == 12 ? y + 1 : y
+					query.created = { gte: new Date(y, m, 0), lte: new Date(ny, nm, 0) }
+					nd = new Date(y, m, 0)
+					nd.setDate(nd.getDate() + 1)
+					fileName = `Laporan ${this.dateHandler(new Date(nd)).split(', ')[1]} - ${this.dateHandler(query.created.lte).split(', ')[1]}`
+					break
+				case 5:
+					nm = m - 1 < 0 ? 12 : m - 1
+					ny = m - 1 < 0 ? y - 1 : y
+					query.created = { gte: new Date(ny, nm, 0), lte: new Date(y, m, 0) }
+					nd = new Date(ny, nm, 0)
+					nd.setDate(nd.getDate() + 1)
+					fileName = `Laporan ${this.dateHandler(nd).split(', ')[1]} - ${this.dateHandler(query.created.lte).split(', ')[1]}`
+					break
+				case 6:
+					const start = new Date(this.dateStart)
+					const end = this.dateEnd ? new Date(this.dateEnd) : new Date()
+					start.setHours(0, 0, 0, 0)
+					end.setHours(0, 0, 0, 0)
+					const startName = start ? this.dateHandler(start).split(', ')[1] : '..'
+					const endName = end ? this.dateHandler(end).split(', ')[1] : this.dateHandler(new Date()).split(', ')[1]
+					start.setDate(start.getDate() - 1)
+					query.created = { gte: start, lte: end }
+					fileName = `Laporan ${startName} - ${endName}`
+					break
+			}
+
+			const res = await this.FinanceService.getTransactionList(query)
+			const list  = res.data.result
+			if(this.exportRange.code == 6) fileName.replace('..', this.dateHandler(list.data.result[list - 1]).split(', ')[1])
+
+			let wb = {}
+            wb.Sheets = {}
+            wb.SheetNames = []
+
+            let wopts = { bookType: 'xlsx', bookSST: false, type: 'binary' }
+            let ws = { '!ref': "A1:Z111176" }
+			let wscols = [
+				{wch: 5},
+				{wch: 15},
+				{wch: 50},
+				{wch: 15},
+				{wch: 15},
+				{wch: 30},
+			]
+            ws['A1'] = { v: "No", t: "s" }
+            ws['B1'] = { v: "Tanggal", t: "s" }
+            ws['C1'] = { v: "Judul", t: "s" }
+            ws['D1'] = { v: "Jumlah", t: "s" }
+            ws['E1'] = { v: "Tipe", t: "s" }
+            ws['F1'] = { v: "Kategori", t: "s" }
+
+			list.forEach((each, i) => {
+				saldo[each.category.type.toLowerCase()] += each.amount
+
+				if(saldo.categorized[each.category.name.replace(' ', '_')] == undefined) {
+                    saldo.categorized[each.category.name.replace(' ', '_')] = {pengeluaran: 0, pemasukan: 0}
+                }
+                saldo.categorized[each.category.name.replace(' ', '_')][each.category.type.toLowerCase()] += each.amount
+
+				ws[`A${i+2}`] = { v: i+1, t: "n" }
+				ws[`B${i+2}`] = { v: this.dateHandler(each.created).split(', ')[1], t: "s" }
+				ws[`C${i+2}`] = { v: each.name, t: "s" }
+				ws[`D${i+2}`] = { v: each.amount, t: "n" }
+				ws[`E${i+2}`] = { v: each.category.type, t: "s" }
+				ws[`F${i+2}`] = { v: each.category.name, t: "s" }
+			})
+
+			ws[`C${list.length + 5}`] = { v: "Total Pengeluaran", t: "s" }
+			ws[`C${list.length + 6}`] = { v: "Total Pemasukan", t: "s" }
+			ws[`C${list.length + 7}`] = { v: "Selisih", t: "s" }
+
+			ws[`D${list.length + 5}`] = { v: saldo.pengeluaran, t: "n" }
+			ws[`D${list.length + 6}`] = { v: saldo.pemasukan, t: "n" }
+			ws[`D${list.length + 7}`] = { v: saldo.pemasukan - saldo.pengeluaran, t: "n" }
+
+			let toArray = Object.keys(saldo.categorized).map(each => {
+				return {
+					name: each.replace('_', ' '),
+					type: saldo.categorized[each].pengeluaran ? 'Pengeluaran' : 'Pemasukan',
+					amount: saldo.categorized[each].pengeluaran ? saldo.categorized[each].pengeluaran : saldo.categorized[each].pemasukan
+				}
+			})
+			let pengeluaran = toArray.filter(each => each.type == 'Pengeluaran')
+			let pemasukan = toArray.filter(each => each.type == 'Pemasukan')
+
+			ws[`C${list.length + 9}`] = { v: "Top Kategori Pengeluaran", t: "s" }
+
+			pengeluaran.forEach((each, i) => {
+				ws[`C${list.length + 10 + i}`] = { v: each.name, t: "s" }
+				ws[`D${list.length + 10 + i}`] = { v: each.amount, t: "n" }
+			})
+
+			ws[`C${list.length + 10 + pengeluaran.length + 1}`] = { v: "Top Kategori Pemasukan", t: "s" }
+
+			pemasukan.forEach((each, i) => {
+				ws[`C${list.length + 10 + pengeluaran.length + 2 + i}`] = { v: each.name, t: "s" }
+				ws[`D${list.length + 10 + pengeluaran.length + 2 + i}`] = { v: each.amount, t: "n" }
+			})
+
+			ws['!cols'] = wscols
+            
+            wb.SheetNames.push('Sheets')
+            wb.Sheets['Sheets'] = ws
+
+            XLSX.write(wb, wopts)
+            XLSX.writeFile(wb, `${fileName}.xlsx`)
+
+			this.exporting = false
+			this.importDialog = false
+			this.dateStart = null
+			this.dateEnd = null
 		},
 		manageCategory() {
 			this.cat.type = this.category.type[0]

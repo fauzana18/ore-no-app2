@@ -13,8 +13,8 @@
 					</template>
 
 					<template v-slot:end>
-						<Button label="Import" icon="pi pi-plus" class="mr-2 inline-block" @click="openDialog" />
-						<Button label="Export" icon="pi pi-upload" class="p-button-help mr-2" @click="exportCSV($event)"  />
+						<Button label="Import" icon="pi pi-plus" class="mr-2 inline-block" @click="openDialog('Import')" />
+						<Button label="Export" icon="pi pi-upload" class="p-button-help mr-2" @click="openDialog('Export')"  />
 					</template>
 				</Toolbar>
 
@@ -184,13 +184,25 @@
 					</template>
 				</DataTable>
 
-				<Dialog header="Import" v-model:visible="importDialog" :breakpoints="{'960px': '75vw'}" :style="{width: '30vw'}" :modal="true" :dismissableMask="true">
-					<Button style="width: 100%;" label="Download Template" icon="pi pi-download" class="mt-2 p-button-success" @click="downloadTemplate" />
-					<FileUpload style="width: 100%;" mode="basic" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" :disabled="submitting"
+				<Dialog :header="header2" v-model:visible="importDialog" :breakpoints="{'960px': '75vw'}" :style="{width: '30vw'}" :modal="true" :dismissableMask="true">
+					<Button v-if="header2 == 'Import'" style="width: 100%;" label="Download Template" icon="pi pi-download" class="mt-2 p-button-success" @click="downloadTemplate" />
+					<FileUpload v-if="header2 == 'Import'" style="width: 100%;" mode="basic" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" :disabled="submitting"
 						:maxFileSize="1000000" label="Import" chooseLabel="Import" class="mt-2" :customUpload="true" @uploader="fileHandler" />
+					<div v-else>
+						<Dropdown style="width: 100%; text-align: center;" v-model="exportRange"  :options="range2" optionLabel="label" placeholder="Tanggal" class="mr-2 mt-2 md:mt-0"/>
+						<div v-if="exportRange.code == 6" class="field mt-4" style="display: block;">
+							<label for="name">Dari Tanggal</label><br>
+							<Calendar style="width: 100%;" :showIcon="true" :showButtonBar="true" v-model="dateStart" dateFormat="dd MM yy"></Calendar>
+						</div>
+						<div v-if="exportRange.code == 6" class="field">
+							<label for="name">Sampai Tanggal</label><br>
+							<Calendar style="width: 100%;" :showIcon="true" :showButtonBar="true" v-model="dateEnd" dateFormat="dd MM yy"></Calendar>
+						</div>
+						<Button :loading="exporting" style="width: 100%;" label="Export" icon="pi pi-upload" class="p-button-help mt-2" @click="exportExcel" :disabled="exportRange.code == 6 && !dateStart && !dateEnd" />
+					</div>
 				</Dialog>
 
-				<Dialog header="Atur Tanggal" v-model:visible="dateDialog" :breakpoints="{'960px': '75vw'}" :style="{width: '30vw'}" :modal="true" :dismissableMask="true">
+				<Dialog header="Atur Tanggal" v-model:visible="dateDialog" :breakpoints="{'960px': '75vw'}" :style="{width: '30vw'}" :modal="true" :dismissableMask="true" @hide="reselect">
 					<div class="field" style="display: block;">
 						<label for="name">Dari Tanggal</label><br>
 						<Calendar style="width: 100%;" :showIcon="true" :showButtonBar="true" v-model="dateStart" dateFormat="dd MM yy"></Calendar>

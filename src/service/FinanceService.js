@@ -9,7 +9,7 @@ export default class FinanceService {
                 else if(Array.isArray(params[each])) query.push(`${each}=${params[each]}`)
                 else {
                     Object.keys(params[each]).forEach(el => {
-                        query.push(`${each}[${el}]=${params[each][el]}`)
+                        if(params[each][el] != null) query.push(`${each}[${el}]=${params[each][el]}`)
                     })
                 }
             }
