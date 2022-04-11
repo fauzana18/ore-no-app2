@@ -1,0 +1,17 @@
+.toggle-left {
+    display: none;
+}
+
+@media screen and (max-width: 575px) {
+    .info-saldo {
+        justify-content: space-between;
+    }
+
+    .toggle-left {
+        display: block;
+    }    
+
+    .toggle-right {
+        display: none;
+    }
+}

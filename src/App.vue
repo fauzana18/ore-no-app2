@@ -47,6 +47,7 @@ export default {
                     label: 'Finance',
                     items: [
                         {label: 'Catatan Keuangan', icon: 'pi pi-fw pi-money-bill', to: '/finance'},
+                        {label: 'Laporan Keuangan', icon: 'pi pi-fw pi-chart-line', to: '/finance-report'},
                     ]
                 },
 				{

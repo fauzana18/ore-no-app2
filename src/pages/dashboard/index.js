@@ -1,4 +1,3 @@
-import EventBus from '@/AppEventBus'
 import FinanceService from '../../service/FinanceService'
 import { saldoStore, profileStore } from '../../store/finance.js'
 
@@ -16,7 +15,6 @@ export default {
 		}
 	},
 	financeService: null,
-	themeChangeListener: null,
     watch: {
         'saldo.in': {
 			handler() {
@@ -44,13 +42,6 @@ export default {
 	},
 	async mounted() {
         this.initData()
-		this.themeChangeListener = (event) => {
-            if (event.dark)
-                this.applyDarkTheme()
-            else
-                this.applyLightTheme()
-        }
-        EventBus.on('change-theme', this.themeChangeListener)
 
 		if (this.isDarkTheme()) {
             this.applyDarkTheme()
@@ -61,7 +52,6 @@ export default {
         await this.getList()
 	},
 	beforeUnmount() {
-        EventBus.off('change-theme', this.themeChangeListener )
     },
 	methods: {
 		formatCurrency(value) {
@@ -119,7 +109,7 @@ export default {
             }
         },
 		isDarkTheme() {
-            return this.$appState.darkTheme === true
+            return localStorage.getItem('dark') == 'true'
         },
 		applyLightTheme() {
 			this.lineOptions = {

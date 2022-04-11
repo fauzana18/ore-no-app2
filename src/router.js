@@ -18,6 +18,11 @@ const routes = [
                 component: () => import('./pages/finance/view.vue')
             },
             {
+                path: '/finance-report',
+                name: 'report',
+                component: () => import('./pages/report/view.vue')
+            },
+            {
                 path: '/setting',
                 name: 'setting',
                 component: () => import('./pages/setting.vue')
@@ -167,7 +172,7 @@ const routes = [
         component: () => import('./pages/Error.vue')
     },
     {
-        path: '/notfound',
+        path: '/404',
         name: 'notfound',
         component: () => import('./pages/NotFound.vue')
     },
@@ -175,7 +180,11 @@ const routes = [
         path: '/access',
         name: 'access',
         component: () => import('./pages/Access.vue')
-    }
+    },
+    {
+        path: '/:pathMatch(.*)*',
+        redirect: '/404'
+    },
 ];
 
 const router = createRouter({
