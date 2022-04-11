@@ -31,7 +31,8 @@ export default {
 			],
 			range: {},
             rerender: 0,
-            showLegend: false
+            showLegend: false,
+            lineHeight: 120
 		}
 	},
 	financeService: null,
@@ -59,6 +60,8 @@ export default {
 		this.financeService = new FinanceService()
 	},
 	async mounted() {
+        const isMobile = await this.checkMobileView()
+        this.lineHeight = isMobile ? 300 : 120
         if (this.isDarkTheme()) {
             this.applyDarkTheme()
         }
@@ -233,6 +236,15 @@ export default {
 					}
 				}
 			}
-		}
+		},
+        checkMobileView(){
+            return new Promise(resolve=>{
+                if(window.innerWidth < 768 || (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) ) {
+                    resolve(true)
+                } 
+                
+                resolve(false)
+            })
+        }
 	}
 }

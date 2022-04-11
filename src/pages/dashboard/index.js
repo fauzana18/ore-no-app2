@@ -11,7 +11,8 @@ export default {
             profiles: profileStore(),
             amountNegative: false,
             loading: false,
-            showMonth: 6
+            showMonth: 6,
+			lineHeight: 120
 		}
 	},
 	financeService: null,
@@ -42,6 +43,8 @@ export default {
 	},
 	async mounted() {
         this.initData()
+		const isMobile = await this.checkMobileView()
+        this.lineHeight = isMobile ? 300 : 120
 
 		if (this.isDarkTheme()) {
             this.applyDarkTheme()
@@ -182,5 +185,14 @@ export default {
             this.transactions = list.data.result
 			this.loading = false
         },
+		checkMobileView(){
+            return new Promise(resolve=>{
+                if(window.innerWidth < 768 || (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) ) {
+                    resolve(true)
+                } 
+                
+                resolve(false)
+            })
+        }
 	}
 }

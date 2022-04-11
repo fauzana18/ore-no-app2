@@ -73,14 +73,14 @@
 
                 <div v-else class="grid mt-3">
                     <div class="col-12 xl:col-6">
-                        <div class="grid justify-content-between align-items-center">
+                        <div class="grid justify-content-between align-items-center mb-3">
                             <h5 class="align-self-start m-0">Grafik Kategori Pengeluaran</h5>
                             <i class="pi toggle-left" :class="showLegend ? 'pi-filter' : 'pi-filter-slash'" style="cursor: pointer;" @click="toggleLegend"></i>
                         </div>
 				        <Chart v-if="pengeluaran.length" type="pie" :data="pieData" :options="pieOptions" :key="'pie1' + rerender" />
                     </div>
                     <div class="col-12 xl:col-6">
-                        <div class="grid justify-content-between align-items-center">
+                        <div class="grid justify-content-between align-items-center mb-3">
                             <h5 class="align-self-start m-0">Grafik Kategori Pemasukan</h5>
                             <i class="pi toggle-right" :class="showLegend ? 'pi-filter' : 'pi-filter-slash'" style="cursor: pointer;" @click="toggleLegend"></i>
                         </div>
@@ -115,7 +115,7 @@
 
                 <div v-else class="col-12 align-items-center justify-content-center">
                     <h5>Grafik Bulanan</h5>
-                    <Chart v-if="pemasukan.length" type="line" :data="lineData" :options="lineOptions" />
+                    <Chart v-if="pemasukan.length" type="line" :data="lineData" :options="lineOptions" :height="lineHeight" />
                 </div>
 			</div>
 		</div>
