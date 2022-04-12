@@ -75,6 +75,9 @@ export default {
         else {
             this.applyLightTheme()
         }
+		this.income = this.saldo.in
+		this.out = this.saldo.out
+		this.amountNegative = this.income - this.out < 0
         this.selectedMode = this.modes[0]
         this.range = this.ranges[0]
         this.splitCategorized(this.saldo.categorized)

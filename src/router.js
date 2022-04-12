@@ -23,6 +23,11 @@ const routes = [
                 component: () => import('./pages/report/view.vue')
             },
             {
+                path: '/finance-plan',
+                name: 'plan',
+                component: () => import('./pages/plan/view.vue')
+            },
+            {
                 path: '/setting',
                 name: 'setting',
                 component: () => import('./pages/setting.vue')
