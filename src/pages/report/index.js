@@ -8,6 +8,8 @@ export default {
             profiles: profileStore(),
             amountNegative: false,
             loading: false,
+			income: 0,
+			out: 0,
             pemasukan: [],
             pengeluaran: [],
             monthly: [],
@@ -32,25 +34,30 @@ export default {
 			range: {},
             rerender: 0,
             showLegend: false,
-            lineHeight: 120
+            lineHeight: 120,
+			dateStart: null,
+			dateEnd: null,
+			dateDialog: false
 		}
 	},
 	financeService: null,
     watch: {
         'saldo.in': {
 			handler() {
-				this.amountNegative = this.saldo.in - this.saldo.out < 0
+				this.income = this.saldo.in
+				this.amountNegative = this.income - this.out < 0
 			}
 		},
 		'saldo.out': {
 			handler() {
-				this.amountNegative = this.saldo.in - this.saldo.out < 0
+				this.out = this.saldo.out
+				this.amountNegative = this.income - this.out < 0
 			}
 		},
         'saldo.monthly': {
             handler() {
-                this.splitCategorized()
-                this.monthlyToArray()
+                this.splitCategorized(this.saldo.categorized)
+                this.monthlyToArray(this.saldo.monthly)
                 this.initPieData()
                 this.initLineData()
             }
@@ -70,8 +77,8 @@ export default {
         }
         this.selectedMode = this.modes[0]
         this.range = this.ranges[0]
-        this.splitCategorized()
-        this.monthlyToArray()
+        this.splitCategorized(this.saldo.categorized)
+        this.monthlyToArray(this.saldo.monthly)
         this.initPieData()
         this.initLineData()
 	},
@@ -84,25 +91,25 @@ export default {
 		formatCurrency(value) {
 			return value.toLocaleString('id-ID', {style: 'currency', currency: 'IDR'})
 		},
-        splitCategorized() {
-            let toArray = Object.keys(this.saldo.categorized).map(each => {
+        splitCategorized(categorized) {
+            let toArray = Object.keys(categorized).map(each => {
 				return {
 					name: each.replace('_', ' '),
-					type: this.saldo.categorized[each].pengeluaran ? 'Pengeluaran' : 'Pemasukan',
-					amount: this.saldo.categorized[each].pengeluaran ? this.saldo.categorized[each].pengeluaran : this.saldo.categorized[each].pemasukan
+					type: categorized[each].pengeluaran ? 'Pengeluaran' : 'Pemasukan',
+					amount: categorized[each].pengeluaran ? categorized[each].pengeluaran : categorized[each].pemasukan
 				}
 			})
 			this.pengeluaran = toArray.filter(each => each.type == 'Pengeluaran')
 			this.pemasukan = toArray.filter(each => each.type == 'Pemasukan')
         },
-        monthlyToArray() {
+        monthlyToArray(monthly) {
             const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
-            this.monthly = Object.keys(this.saldo.monthly).map(each => {
+            this.monthly = Object.keys(monthly).map(each => {
                 const name = each.split('_')
 				return {
 					name: `${monthNames[name[0]]} ${name[1]}`,
-					in: this.saldo.monthly[each].pemasukan,
-					out: this.saldo.monthly[each].pengeluaran
+					in: monthly[each].pemasukan,
+					out: monthly[each].pengeluaran
 				}
 			})
         },
@@ -151,6 +158,73 @@ export default {
                 ]
             }
         },
+		async selectRange() {
+			if(this.range.code == 6) {
+				this.dateStart = null
+				this.dateEnd = null
+				this.dateDialog = true
+				return
+			}
+
+			let range = this.handleRange()
+			await this.getSaldo(range)
+		},
+		reselect() {
+			if(!this.dateStart && !this.dateEnd) this.range = this.ranges[0]
+		},
+		async searchDate() {
+			this.dateDialog = false
+			if(!this.dateStart && !this.dateEnd) return
+			let range = this.handleRange()
+			await this.getSaldo(range)
+		},
+		handleRange() {
+			const date = new Date(), y = date.getFullYear(), m = date.getMonth()
+			let range = {}, ny, nm
+			switch (this.range.code) {
+				case 1:
+					range = undefined
+					break
+				case 2:
+					date.setDate(date.getDate() - 7)
+					date.setHours(0, 0, 0, 0)
+					range = { gte: date }
+					break
+				case 3:
+					date.setDate(date.getDate() - 30)
+					date.setHours(0, 0, 0, 0)
+					range = { gte: date }
+					break
+				case 4:
+					nm = m + 1 == 12 ? 0 : m + 1
+					ny = m + 1 == 12 ? y + 1 : y
+					range = { gte: new Date(y, m, 0), lte: new Date(ny, nm, 0) }
+					break
+				case 5:
+					nm = m - 1 < 0 ? 12 : m - 1
+					ny = m - 1 < 0 ? y - 1 : y
+					range = { gte: new Date(ny, nm, 0), lte: new Date(y, m, 0) }
+					break
+				case 6:
+					const start = new Date(this.dateStart)
+					start.setDate(start.getDate() - 1)
+					if(start) range.gte = start
+					if(this.dateEnd) range.lte = this.dateEnd
+					break
+			}
+
+			return range
+		},
+		async getSaldo(range) {
+			const res = await this.financeService.getSaldo(this.profiles.list[this.profiles.selected].id, range)
+			this.out = res.data.pengeluaran
+			this.income = res.data.pemasukan
+			this.amountNegative = this.income - this.out < 0
+			this.splitCategorized(res.data.categorized)
+			this.monthlyToArray(res.data.monthly)
+			this.initPieData()
+			this.initLineData()
+		},
         isDarkTheme() {
             return localStorage.getItem('dark') == 'true'
         },

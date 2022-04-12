@@ -15,22 +15,38 @@
                 <div class="col-12 align-items-center justify-content-center mt-2">
                     <div class="grid info-saldo">
                         <p class="line-height-3 m-0">Total Pengeluaran</p>
-                        <p class="line-height-3 ml-4">{{formatCurrency(saldo.out)}}</p>
+                        <p class="line-height-3 ml-4">{{formatCurrency(out)}}</p>
                     </div>
                     <Divider></Divider>
                     <div class="grid info-saldo">
                         <p class="line-height-3 m-0 text-green-500">Total Pemasukan</p>
-                        <p class="line-height-3 m-0 text-green-500 ml-4">{{formatCurrency(saldo.in)}}</p>
+                        <p class="line-height-3 m-0 text-green-500 ml-4">{{formatCurrency(income)}}</p>
                     </div>
                     <Divider></Divider>
                     <div class="grid info-saldo">
                         <p class="line-height-3 m-0">Saldo</p>
-                        <p class="line-height-3 m-0 ml-4" :class="amountNegative ? 'text-red' : 'text-green-500'">{{formatCurrency(saldo.in - saldo.out)}}</p>
+                        <p class="line-height-3 m-0 ml-4" :class="amountNegative ? 'text-red' : 'text-green-500'">{{formatCurrency(income - out)}}</p>
                     </div>
                     <Divider></Divider>
                 </div>
-                <Dropdown style="width: 100%; text-align: center;" v-model="range"  :options="ranges" optionLabel="label" placeholder="Periode" class="mr-2 mt-2 mb-3 md:mt-0"/>
-				<div v-if="selectedMode && selectedMode.code == 1" class="grid">
+
+                <Dropdown style="width: 100%; text-align: center;" v-model="range"  :options="ranges" optionLabel="label" placeholder="Periode" class="mr-2 mt-2 mb-3 md:mt-0" @change="selectRange"/>
+				
+                <Dialog header="Atur Periode" v-model:visible="dateDialog" :breakpoints="{'960px': '75vw'}" :style="{width: '30vw'}" :modal="true" :dismissableMask="true" @hide="reselect">
+					<div class="field" style="display: block;">
+						<label for="name">Dari Tanggal</label><br>
+						<Calendar style="width: 100%;" :showIcon="true" :showButtonBar="true" v-model="dateStart" dateFormat="dd MM yy"></Calendar>
+					</div>
+					<div class="field">
+						<label for="name">Sampai Tanggal</label><br>
+						<Calendar style="width: 100%;" :showIcon="true" :showButtonBar="true" v-model="dateEnd" dateFormat="dd MM yy"></Calendar>
+					</div>
+					<template #footer>
+						<Button label="Cari" icon="pi pi-search" class="p-button-text" @click="searchDate" />
+					</template>
+				</Dialog>
+                
+                <div v-if="selectedMode && selectedMode.code == 1" class="grid">
                     <div class="col-12 xl:col-6">
                         <DataTable :value="pengeluaran" responsiveLayout="scroll" :loading="loading">
                             <template #header>

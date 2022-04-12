@@ -65,7 +65,11 @@ export default class FinanceService {
         return axios.delete(`${process.env.VUE_APP_BASE_URL}/finance/category/${id}`)
     }
 
-    getSaldo(profile) {
-        return axios.get(`${process.env.VUE_APP_BASE_URL}/finance/saldo?profile_id=${profile}`)
+    getSaldo(profile, range = {}) {
+        let query = ''
+        Object.keys(range).forEach(each => {
+            query += `&created[${each}]=${range[each]}`
+        })
+        return axios.get(`${process.env.VUE_APP_BASE_URL}/finance/saldo?profile_id=${profile}${query}`)
     }
 }
