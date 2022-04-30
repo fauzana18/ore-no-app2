@@ -48,6 +48,12 @@ export default {
                         {label: 'Laporan Keuangan', icon: 'pi pi-fw pi-chart-line', to: '/finance-report'},
                         {label: 'Rencana Keuangan', icon: 'pi pi-fw pi-book', to: '/finance-plan'},
                     ]
+                },
+                {
+                    label: '',
+                    items: [
+                        {label: 'Setting', icon: 'pi pi-fw pi-cog', to: '/setting'},
+                    ]
                 }
             ]
         }

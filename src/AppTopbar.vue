@@ -9,18 +9,42 @@
 			<i class="pi pi-bars"></i>
 		</button>
 
-		<button class="p-link layout-topbar-menu-button layout-topbar-button"
+		<!-- <button class="p-link layout-topbar-menu-button layout-topbar-button"
 			v-styleclass="{ selector: '@next', enterClass: 'hidden', enterActiveClass: 'scalein', 
 			leaveToClass: 'hidden', leaveActiveClass: 'fadeout', hideOnOutsideClick: true}">
 			<i class="pi pi-ellipsis-v"></i>
+		</button> -->
+		<button class="p-link layout-topbar-menu-button layout-topbar-button profile" @click="toggleProfile" v-touch:swipe="changeProfile">
+			<!-- <i class="pi pi-user"></i> -->
+			<div class="profile-logo" :style="`background-color: ${profiles.list[profiles.selected] ? profiles.list[profiles.selected].color : ''};`">
+				{{profiles.list[profiles.selected] ? profiles.list[profiles.selected].name.charAt(0) : ''}}
+			</div>
 		</button>
-		<ul class="layout-topbar-menu hidden lg:flex origin-top">
-			<li>
-				<button class="p-link layout-topbar-button" @click="goto('setting')">
-					<i class="pi pi-cog"></i>
-					<span>Settings</span>
-				</button>
-			</li>
+		<OverlayPanel v-if="profiles.list.length" ref="op" appendTo="body" :showCloseIcon="false" class="menu-profile">
+			<Card v-for="(items, i) of profiles.list" class="card-width" :key="i" style="cursor: pointer;" @click="selectProfile(i, $event)">
+				<template v-slot:content>
+					<div style="display: flex; align-items: center; justify-content: space-between;">
+						<p class="line-height-3 m-0">{{items.name}}</p>
+						<i v-if="profiles.selected == i" class="pi pi-check" style="font-size: 2rem"></i>
+						<div v-else>
+							<span class="p-buttonset">
+								<Button icon="pi pi-pencil" class="button-small p-button-success" @click="editProfile(i)" />
+								<Button icon="pi pi-trash" class="button-small p-button-warning" @click="confirmDeleteProfile(i)" />
+							</span>
+						</div>
+					</div>
+				</template>
+			</Card>
+			<Card class="card-width" style="cursor: pointer;" @click="addProfile">
+				<template v-slot:content>
+					<div style="display: flex; align-items: center; justify-content: center;">
+						<i class="pi pi-plus mr-3" style="font-size: 2rem"></i>
+						<p class="line-height-3 m-0">Tambah Baru</p>
+					</div>
+				</template>
+			</Card>
+		</OverlayPanel>
+		<!-- <ul class="layout-topbar-menu hidden lg:flex origin-top">
 			<li>
 				<button class="p-link layout-topbar-button" @click="toggleProfile">
 					<i class="pi pi-user"></i>
@@ -51,7 +75,7 @@
 					</Card>
 				</OverlayPanel>
 			</li>
-		</ul>
+		</ul> -->
 
 		<Dialog v-model:visible="profileDialog" :style="{width: '450px'}" header="Tambah Profil" :modal="true" class="p-fluid" :dismissableMask="true">
 			<div class="field">
@@ -120,6 +144,18 @@ export default {
 			this.profiles.select(i)
 			this.saldo.getSaldo(this.profiles.list[i].id)
 			this.$refs.op.hide()
+		},
+		changeProfile(dir) {
+			if(dir == 'top') {
+				if(this.profiles.selected == this.profiles.list.length - 1) this.profiles.selected = 0
+				else this.profiles.selected++
+				this.saldo.getSaldo(this.profiles.list[this.profiles.selected].id)
+			}
+			else if(dir == 'bottom') {
+				if(this.profiles.selected == 0) this.profiles.selected = this.profiles.list.length - 1
+				else this.profiles.selected--
+				this.saldo.getSaldo(this.profiles.list[this.profiles.selected].id)
+			}
 		},
 		goto(page) {
 			const ul = document.getElementsByTagName('ul')[0]
@@ -207,6 +243,23 @@ export default {
 	.button-small {
 		height: 2rem !important;
 		width: 2rem !important;
+	}
+
+	.profile {
+		margin: 0 0 0 auto;
+		padding: 0;
+		list-style: none;
+		display: flex !important;
+	}
+
+	.profile-logo {
+		width: 40px;
+		height: 40px;
+		border-radius: 30px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		color: white;
 	}
 
 	@media screen and (max-width: 575px) {

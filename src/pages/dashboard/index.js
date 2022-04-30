@@ -12,7 +12,11 @@ export default {
             amountNegative: false,
             loading: false,
             showMonth: 6,
-			lineHeight: 120
+			lineHeight: 120,
+			saldoAll: {
+				amount: 0,
+				negative: false
+			}
 		}
 	},
 	financeService: null,
@@ -42,6 +46,9 @@ export default {
 		this.financeService = new FinanceService()
 	},
 	async mounted() {
+		const saldoAll = await this.financeService.getSaldoAll()
+		this.saldoAll.amount = saldoAll.data.pemasukan - saldoAll.data.pengeluaran
+		this.saldoAll.negative = saldoAll.data.pemasukan - saldoAll.data.pengeluaran < 0
         this.initData()
 		const isMobile = await this.checkMobileView()
         this.lineHeight = isMobile ? 300 : 120

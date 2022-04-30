@@ -72,4 +72,8 @@ export default class FinanceService {
         })
         return axios.get(`${process.env.VUE_APP_BASE_URL}/finance/saldo?profile_id=${profile}${query}`)
     }
+
+    getSaldoAll() {
+        return axios.get(`${process.env.VUE_APP_BASE_URL}/finance/saldoall`)
+    }
 }
