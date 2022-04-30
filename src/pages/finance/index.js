@@ -249,6 +249,8 @@ export default {
 						const calculated = body.amount - findTransaction.amount
 						this.saldo.add(this.transaction.type.name == 'Pemasukan' ? 'in' : 'out', calculated)
 					}
+					this.transactionDialog = false
+					this.$toast.add({severity: 'success', summary: 'Sukses', detail: res.data.message, life: 3000})
 				}
 				else {
 					this.submitStatus = 'error'

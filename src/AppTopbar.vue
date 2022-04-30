@@ -1,6 +1,6 @@
 <template>
 	<Toast/>
-	<div class="layout-topbar">
+	<div class="layout-topbar" @touchmove="preventScroll($event)">
 		<router-link to="/" class="layout-topbar-logo">
 			<img alt="Logo" :src="topbarImage()" />
 			<span>Ore no App</span>
@@ -15,7 +15,6 @@
 			<i class="pi pi-ellipsis-v"></i>
 		</button> -->
 		<button class="p-link layout-topbar-menu-button layout-topbar-button profile" @click="toggleProfile" v-touch:swipe="changeProfile">
-			<!-- <i class="pi pi-user"></i> -->
 			<div class="profile-logo" :style="`background-color: ${profiles.list[profiles.selected] ? profiles.list[profiles.selected].color : ''};`">
 				{{profiles.list[profiles.selected] ? profiles.list[profiles.selected].name.charAt(0) : ''}}
 			</div>
@@ -220,7 +219,10 @@ export default {
 			this.deleteProfileDialog = false
 			this.$toast.add({severity: stat, summary, detail: message, life: 3000})
 			this.submitting = false
-		}
+		},
+        preventScroll(e) {
+            e.preventDefault()
+        }
     },
 	computed: {
 		darkTheme() {
