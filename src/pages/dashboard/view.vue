@@ -88,7 +88,7 @@
         <div class="col-12 xl:col-6">
             <div class="card">
                 <h5>Grafik Bulanan</h5>
-                <Chart type="line" :data="lineData" :options="lineOptions" :height="lineHeight" />
+                <Chart v-if="saldo.in" type="line" :data="lineData" :options="lineOptions" :height="lineHeight" />
             </div>
         </div>
 	</div>
