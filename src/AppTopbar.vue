@@ -8,12 +8,7 @@
 		<button class="p-link layout-menu-button layout-topbar-button" @click="onMenuToggle">
 			<i class="pi pi-bars"></i>
 		</button>
-
-		<!-- <button class="p-link layout-topbar-menu-button layout-topbar-button"
-			v-styleclass="{ selector: '@next', enterClass: 'hidden', enterActiveClass: 'scalein', 
-			leaveToClass: 'hidden', leaveActiveClass: 'fadeout', hideOnOutsideClick: true}">
-			<i class="pi pi-ellipsis-v"></i>
-		</button> -->
+		
 		<button class="p-link layout-topbar-menu-button layout-topbar-button profile" @click="toggleProfile" v-touch:swipe="changeProfile">
 			<div class="profile-logo" :style="`background-color: ${profiles.list[profiles.selected] ? profiles.list[profiles.selected].color : ''};`">
 				{{profiles.list[profiles.selected] ? profiles.list[profiles.selected].name.charAt(0) : ''}}
@@ -43,44 +38,13 @@
 				</template>
 			</Card>
 		</OverlayPanel>
-		<!-- <ul class="layout-topbar-menu hidden lg:flex origin-top">
-			<li>
-				<button class="p-link layout-topbar-button" @click="toggleProfile">
-					<i class="pi pi-user"></i>
-					<span>Profile</span>
-				</button>
-				<OverlayPanel v-if="profiles.list.length" ref="op" appendTo="body" :showCloseIcon="false" class="menu-profile">
-					<Card v-for="(items, i) of profiles.list" class="card-width" :key="i" style="cursor: pointer;" @click="selectProfile(i, $event)">
-						<template v-slot:content>
-							<div style="display: flex; align-items: center; justify-content: space-between;">
-								<p class="line-height-3 m-0">{{items.name}}</p>
-								<i v-if="profiles.selected == i" class="pi pi-check" style="font-size: 2rem"></i>
-								<div v-else>
-									<span class="p-buttonset">
-										<Button icon="pi pi-pencil" class="button-small p-button-success" @click="editProfile(i)" />
-										<Button icon="pi pi-trash" class="button-small p-button-warning" @click="confirmDeleteProfile(i)" />
-									</span>
-								</div>
-							</div>
-						</template>
-					</Card>
-					<Card class="card-width" style="cursor: pointer;" @click="addProfile">
-						<template v-slot:content>
-							<div style="display: flex; align-items: center; justify-content: center;">
-								<i class="pi pi-plus mr-3" style="font-size: 2rem"></i>
-								<p class="line-height-3 m-0">Tambah Baru</p>
-							</div>
-						</template>
-					</Card>
-				</OverlayPanel>
-			</li>
-		</ul> -->
 
 		<Dialog v-model:visible="profileDialog" :style="{width: '450px'}" header="Tambah Profil" :modal="true" class="p-fluid" :dismissableMask="true">
 			<div class="field">
 				<label for="name">Nama</label>
 				<InputText id="name" v-model="profile.name" required="true" autofocus :class="{'p-invalid': submitted && !profile.name}" autocomplete="off" @keypress.enter="saveProfile" />
 				<small class="p-invalid" v-if="submitted && !profile.name">Nama harus diisi.</small>
+				<ColorPicker v-model="color" style="width: 100%; margin-top: 20px"/>
 			</div>
 			<template #footer>
 				<Button label="Simpan" icon="pi pi-check" class="p-button-text" :loading="submitting" @click="saveProfile" />
@@ -115,7 +79,8 @@ export default {
 			profile: {},
 			submitted: false,
 			submitting: false,
-			selected: null
+			selected: null,
+			color: 'black'
 		}
 	},
 	financeService: null,
@@ -164,12 +129,14 @@ export default {
 		addProfile() {
 			this.$refs.op.hide()
 			this.profile = {}
+			this.color = 'black'
 			this.submitted = false
 			this.profileDialog = true
 		},
 		editProfile(i) {
 			this.$refs.op.hide()
 			this.profile = this.profiles.list[i]
+			this.color = this.profiles.list[i].color
 			this.selected = i
 			this.submitted = false
 			this.profileDialog = true
@@ -191,8 +158,8 @@ export default {
 			}
 
 			try {
-				if(!this.profile.id) res = await this.financeService.createProfile({ name: this.profile.name})
-				else if(!isDelete) res = await this.financeService.updateProfile({ name: this.profile.name}, this.profile.id)
+				if(!this.profile.id) res = await this.financeService.createProfile({ name: this.profile.name, color: `#${this.color}`})
+				else if(!isDelete) res = await this.financeService.updateProfile({ name: this.profile.name, color: `#${this.color}`}, this.profile.id)
 				else res = await this.financeService.deleteProfile(this.profile.id)
 
 				if(res.status == 200) {
