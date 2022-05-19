@@ -1,4 +1,4 @@
-import FinanceService from '../../service/financeService'
+import FinanceService from '../../service/FinanceService'
 import { profileStore, categoryStore, saldoStore } from '../../store/finance.js'
 import * as XLSX from 'xlsx'
 

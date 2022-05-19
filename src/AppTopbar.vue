@@ -65,7 +65,7 @@
 </template>
 
 <script>
-import FinanceService from './service/financeService'
+import FinanceService from './service/FinanceService'
 import { profileStore, saldoStore } from './store/finance.js'
 
 export default {

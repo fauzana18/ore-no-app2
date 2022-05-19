@@ -1,4 +1,4 @@
-import FinanceService from '../../service/financeService'
+import FinanceService from '../../service/FinanceService'
 import { saldoStore, profileStore } from '../../store/finance.js'
 
 export default {
