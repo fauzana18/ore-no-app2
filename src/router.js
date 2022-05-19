@@ -28,6 +28,11 @@ const routes = [
                 component: () => import('./pages/plan/view.vue')
             },
             {
+                path: '/workout',
+                name: 'workout',
+                component: () => import('./pages/workout/view.vue')
+            },
+            {
                 path: '/setting',
                 name: 'setting',
                 component: () => import('./pages/setting.vue')

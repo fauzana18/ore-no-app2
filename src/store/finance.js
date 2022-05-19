@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import FinanceService from '../service/FinanceService'
+import FinanceService from '../service/financeService'
 const financeService = new FinanceService()
 
 export const profileStore = defineStore('profiles', {

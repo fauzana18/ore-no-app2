@@ -36,17 +36,23 @@ export default {
             scale: localStorage.getItem('scale') || 14,
             menu : [
                 {
-                    label: 'Home',
+                    label: 'Beranda',
                     items: [
                         {label: 'Dashboard', icon: 'pi pi-fw pi-home', to: '/'}
                     ]
                 },
                 {
-                    label: 'Finance',
+                    label: 'Keuangan',
                     items: [
                         {label: 'Catatan Keuangan', icon: 'pi pi-fw pi-money-bill', to: '/finance'},
                         {label: 'Laporan Keuangan', icon: 'pi pi-fw pi-chart-line', to: '/finance-report'},
                         {label: 'Rencana Keuangan', icon: 'pi pi-fw pi-book', to: '/finance-plan'},
+                    ]
+                },
+                {
+                    label: 'Olahraga',
+                    items: [
+                        {label: 'Catatan Olahraga', icon: 'pi pi-fw pi-bolt', to: '/workout'},
                     ]
                 },
                 {
