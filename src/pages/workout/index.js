@@ -8,9 +8,12 @@ export default {
 			expandedRowGroups: null,
 			workouts: [],
 			editDialog: false,
+			editDialog2: false,
 			createDialog: false,
 			selected: null,
 			reps: 0,
+			note: '',
+			isReps: true,
 			set: 'set1',
 			submitting: false,
 			workset: null,
@@ -102,13 +105,21 @@ export default {
 			this.reps = data
 			this.set = set
 			this.editDialog = true
+			this.isReps = true
 		},
-		async updateReps() {
+		editNote(id, data) {
+			this.selected = id
+			this.note = data
+			this.editDialog2 = true
+			this.isReps = false
+		},
+		async updateData() {
 			let stat, message, summary
 			this.submitting = true
-			const body = {
-				[this.set]: this.reps
-			}
+			let body = {}
+			
+			if(this.isReps) body = { [this.set]: this.reps }
+			else body = { note: this.note }
 
 			try {
 				const res = await this.workoutService.updateWorkout(body, this.selected)
@@ -130,6 +141,7 @@ export default {
 			}
 
 			this.editDialog = false
+			this.editDialog2 = false
 			this.$toast.add({severity: stat, summary, detail: message, life: 1000})
 			this.submitting = false
 			if(stat == 'success') await this.getList()

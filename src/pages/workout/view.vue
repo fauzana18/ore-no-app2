@@ -6,7 +6,7 @@
                 <h5>Catatan Olahraga</h5>
 				
 				<DataTable :value="workouts" rowGroupMode="subheader" groupRowsBy="date" dataKey="id" :key="'table'+rerender"
-					sortMode="single" sortField="date" :sortOrder="-1" responsiveLayout="scroll" :loading="loading"
+					sortMode="single" sortField="date" :sortOrder="-1" responsiveLayout="stack" :loading="loading"
 					:expandableRowGroups="true" v-model:expandedRowGroups="expandedRowGroups" @rowgroupExpand="onRowGroupExpand">
 					<template #header>
 						<div class="flex flex-row md:flex-row justify-content-between md:align-items-center">
@@ -47,11 +47,19 @@
 							</div>
 						</template>
 					</Column>
+					<Column field="note" header="Keterangan">
+						<template #body="slotProps">
+							<div class="flex justify-content-between align-items-center note">
+								{{slotProps.data.note || '-'}}
+								<Button icon="pi pi-pencil" class="p-button-rounded mr-2" @click="editNote(slotProps.data.id, slotProps.data.note)" />
+							</div>
+						</template>
+					</Column>
 					<template #groupheader="slotProps">
 						<span>{{dateHandler(slotProps.data.date)}}</span>
 					</template>
 					<template #groupfooter="slotProps">
-						<td colspan="4">
+						<td colspan="5">
 							<div class="table-footer">
 								<ConfirmPopup></ConfirmPopup>
 								<Button label="Hapus" icon="pi pi-trash" class="p-button-danger" @click="confirmDelete($event, slotProps.data.date)" :loading="submitting" />
@@ -66,7 +74,17 @@
 					</div>
 
 					<template #footer>
-						<Button label="Simpan" icon="pi pi-check" class="p-button-text" :loading="submitting" @click="updateReps" />
+						<Button label="Simpan" icon="pi pi-check" class="p-button-text" :loading="submitting" @click="updateData" />
+					</template>
+				</Dialog>
+
+				<Dialog v-model:visible="editDialog2" header="Keterangan" :modal="true" class="p-fluid">
+					<div class="field">
+						<InputText autocomplete="off" v-model="note" required="true" autofocus />
+					</div>
+
+					<template #footer>
+						<Button label="Simpan" icon="pi pi-check" class="p-button-text" :loading="submitting" @click="updateData" />
 					</template>
 				</Dialog>
 

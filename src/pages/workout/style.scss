@@ -4,5 +4,12 @@
     justify-content: flex-end;
 }
 
+.note {
+    width: 100%;
+}
+
 @media screen and (max-width: 575px) {
+    .note {
+        width: 50%;
+    }
 }
