@@ -103,8 +103,8 @@ export default {
 			}
 		},
 		selectProfile(i, e) {
-			const tag = e.path.map(each => each.tagName)
-			if(tag.includes('BUTTON')) return
+			const tag = e.target.nodeName
+			if(tag == 'BUTTON' || tag == 'SPAN') return
 			this.profiles.select(i)
 			this.saldo.getSaldo(this.profiles.list[i].id)
 			this.$refs.op.hide()
